@@ -1,0 +1,90 @@
+name: Build & Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install pygame pyinstaller
+
+      - name: Build Windows exe
+        run: pyinstaller --onefile --windowed --name VampireSurvivorsClone main.py
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-build
+          path: dist/VampireSurvivorsClone.exe
+
+  build-mac:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install pygame pyinstaller
+
+      - name: Build Mac app
+        run: pyinstaller --onefile --windowed --name VampireSurvivorsClone main.py
+
+      - name: Zip Mac app
+        run: zip -r VampireSurvivorsClone-Mac.zip dist/VampireSurvivorsClone
+
+      - name: Upload Mac artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mac-build
+          path: VampireSurvivorsClone-Mac.zip
+
+  release:
+    needs: [build-windows, build-mac]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Windows build
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-build
+
+      - name: Download Mac build
+        uses: actions/download-artifact@v4
+        with:
+          name: mac-build
+
+      - name: Publish Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            VampireSurvivorsClone.exe
+            VampireSurvivorsClone-Mac.zip
+          body: |
+            ## 🧛 Vampire Survivors Clone
+
+            ### İndirme
+            - **Windows:** `VampireSurvivorsClone.exe` — direkt çalıştır
+            - **Mac:** `VampireSurvivorsClone-Mac.zip` — zip'i aç, içindeki dosyayı çalıştır
+
+            ### Kontroller
+            - `WASD` / Ok tuşları → Hareket
+            - `P` → Duraklat
+            - `1/2/3` → Upgrade seç
+            - `R` → Yeniden başla
+            - `ESC` → Çıkış
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
