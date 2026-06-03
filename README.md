@@ -1,6 +1,6 @@
 # 🧛 Vampire Survivors Clone
 
-A fast-paced, wave-based survival game built with Python and Pygame — inspired by the Vampire Survivors genre. Fight endless hordes of enemies, collect XP, level up, and upgrade your arsenal.
+Fight hundreds of enemies, evolve powerful weapons and survive endless waves in this Vampire Survivors-inspired game built entirely with Python and Pygame.
 
 ---
 
