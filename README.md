@@ -1,6 +1,7 @@
 <p align="center">
   <img src="gameplay.gif" width="900">
 </p>
+⭐ Enjoyed the game? Leave a star on GitHub to support the project!
 # 🧛 Vampire Survivors Clone
 
 Fight hundreds of enemies, evolve powerful weapons and survive endless waves in this Vampire Survivors-inspired game built entirely with Python and Pygame.
