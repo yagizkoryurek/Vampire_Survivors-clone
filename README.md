@@ -1,6 +1,7 @@
 <p align="center">
   <img src="gameplay.gif" width="900">
 </p>
+⭐ Enjoyed the game? Leave a star on GitHub to support the project!
 ## Screenshots
 
 ![Screenshot 1](screenshot1.png)
