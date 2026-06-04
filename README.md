@@ -1,6 +1,8 @@
 <p align="center">
   <img src="gameplay.gif" width="900">
 </p>
+🎮 Play & Download:
+https://yagizkoryurek.itch.io/vampire-survivors-clone
 ⭐ Enjoyed the game? Leave a star on GitHub to support the project!
 
 ## Screenshots
