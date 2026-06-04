@@ -2,9 +2,9 @@
   <img src="gameplay.gif" width="900">
 </p>
 ##ScreenShots
-! [ScreenShot 1](Screenshot1.png)
-! [ScreenShot 2](Screenshot2.png)
-! [ScreenShot 3](Screenshot.3png)
+! [ScreenShot 1](screenshot1.png)
+! [ScreenShot 2](screenshot2.png)
+! [ScreenShot 3](screenshot3.png)
 ⭐ Enjoyed the game? Leave a star on GitHub to support the project!
 # 🧛 Vampire Survivors Clone
 
