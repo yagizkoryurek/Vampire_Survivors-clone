@@ -907,9 +907,39 @@ class Player:
         if self.invincible > 0 and (tick // 4) % 2 == 0:
             color = (200, 200, 200)
 
-        # Gövde
-        pygame.draw.circle(surf, self.dark_color, (sx, sy), r)
-        pygame.draw.circle(surf, color, (sx, sy), r - 3)
+        cid = self.character_id
+
+        # Character silhouettes
+        if cid == "rogue":
+            body_r = r - 3
+            hood = [(sx, sy - r - 6), (sx - r, sy - 3), (sx - body_r, sy + 8),
+                    (sx, sy + r - 1), (sx + body_r, sy + 8), (sx + r, sy - 3)]
+            pygame.draw.polygon(surf, self.dark_color, hood)
+            pygame.draw.polygon(surf, color, [(sx, sy - r - 2), (sx - r + 4, sy - 2),
+                                              (sx, sy + r - 5), (sx + r - 4, sy - 2)])
+            pygame.draw.rect(surf, (15, 12, 25), (sx - 9, sy - 4, 18, 6), border_radius=3)
+        elif cid == "mage":
+            robe = [(sx, sy - r + 3), (sx - r + 1, sy + r), (sx + r - 1, sy + r)]
+            pygame.draw.polygon(surf, self.dark_color, robe)
+            pygame.draw.polygon(surf, color, [(sx, sy - r + 6), (sx - r + 5, sy + r - 2),
+                                              (sx + r - 5, sy + r - 2)])
+            pygame.draw.polygon(surf, self.dark_color,
+                                [(sx - 11, sy - r + 1), (sx + 11, sy - r + 1), (sx, sy - r - 21)])
+            pygame.draw.polygon(surf, color,
+                                [(sx - 7, sy - r), (sx + 7, sy - r), (sx, sy - r - 15)])
+            pygame.draw.ellipse(surf, self.dark_color, (sx - 15, sy - r - 2, 30, 7))
+        elif cid in ("paladin", "tank"):
+            pygame.draw.ellipse(surf, self.dark_color, (sx - r - 7, sy - 5, (r + 7) * 2, r + 16))
+            pygame.draw.rect(surf, self.dark_color, (sx - r - 6, sy - 3, (r + 6) * 2, r + 13),
+                             border_radius=7)
+            pygame.draw.circle(surf, color, (sx, sy), r - 2)
+            pygame.draw.rect(surf, (220, 235, 230), (sx - 3, sy - r + 2, 6, r + 9), border_radius=2)
+        else:
+            pygame.draw.ellipse(surf, self.dark_color, (sx - r - 3, sy - r + 1, (r + 3) * 2, r * 2))
+            pygame.draw.circle(surf, self.dark_color, (sx, sy), r)
+            pygame.draw.circle(surf, color, (sx, sy), r - 3)
+            pygame.draw.arc(surf, (220, 240, 255), (sx - r + 4, sy - r + 4, (r - 4) * 2, (r - 4) * 2),
+                            math.radians(210), math.radians(330), 2)
 
         # Göz
         ex = sx + int(math.cos(self.angle) * 6)
