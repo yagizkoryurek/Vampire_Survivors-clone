@@ -31,23 +31,18 @@ Survive as long as possible against increasingly difficult enemy waves. Your wea
 
 ## ✨ Features
 
-- **3 Auto-Weapons**
-  - 🔥 **Whip** — Slashes the nearest enemy in a cone
-  - ✨ **Orb** — Orbiting projectiles that circle the player
-  - 💜 **Aura** — Persistent damage field around the player
-
-- **4 Enemy Types**
-  - Basic, Fast, Tank, Ranged (with projectile attacks)
-
-- **XP & Level-Up System** — Choose 1 of 3 random upgrades on level-up
-
-- **7 Upgrades** — Max HP, Speed, Whip, Orb, Aura, Regeneration, Armor
-
-- **Wave System** — Difficulty scales every 30 seconds; horde events every 60s
-
-- **Visual Polish** — Particle effects, damage numbers, glow rendering, smooth camera
-
----
+- Multiple Playable Characters
+- Unique Character Stats
+- Character Selection System
+- Multiple Weapons & Upgrades
+- XP & Leveling System
+- Weapon Evolution
+- Elite Enemies
+- Boss Battles
+- Treasure Chests
+- Gold & Meta Progression
+- Save System
+- Endless Survival Gameplay
 
 ## 🖥️ Requirements
 
