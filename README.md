@@ -7,12 +7,22 @@ https://yagizkoryurek.itch.io/vampire-survivors-clone
 
 ## Screenshots
 
-![Screenshot 1](screenshot1.png)
+### Main Menu
+![Main Menu](screenshot1.png)
 
-![Screenshot 2](screenshot2.png)
+### Character Selection
+![Character Selection](screenshot2.png)
 
-![Screenshot 3](screenshot3.png)
-⭐ Enjoyed the game? Leave a star on GitHub to support the project!
+### Boss Battle
+![Boss Battle](screenshot3.png)
+
+### Level Up System
+![Level Up](screenshot4.png)
+
+### Combat Gameplay
+![Combat](screenshot5.png)
+
+
 # 🧛 Vampire Survivors Clone
 
 Fight hundreds of enemies, evolve powerful weapons and survive endless waves in this Vampire Survivors-inspired game built entirely with Python and Pygame.
@@ -55,7 +65,7 @@ Survive as long as possible against increasingly difficult enemy waves. Your wea
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/YOUR_USERNAME/vampire-survivors-clone.git
+git clone https://github.com/yagizkoryurek/Vampire_Survivors-clone.git
 cd vampire-survivors-clone
 
 # 2. Install dependencies
