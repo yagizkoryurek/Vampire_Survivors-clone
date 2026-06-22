@@ -70,10 +70,18 @@ STRINGS = {
         },
         # Menü / yeni özellik metinleri (TR)
         "menu_play":      "Oyuna Başla",
+        "menu_campaign":  "Campaign",
         "menu_settings":  "Ayarlar",
         "menu_chars":     "Karakterler",
         "menu_quit":      "Çıkış",
         "menu_back":      "Geri",
+        "main_menu":      "Ana Menü",
+        "campaign_title": "Campaign Mode",
+        "campaign_level": "Level {n}",
+        "target_wave":    "Target Wave {n}",
+        "completed":      "TAMAMLANDI",
+        "level_completed":"LEVEL COMPLETED",
+        "next_level":     "Next Level",
         "menu_sound":     "Ses",
         "menu_sound_on":  "AÇIK",
         "menu_sound_off": "KAPALI",
@@ -142,10 +150,18 @@ STRINGS = {
         },
         # Menu / new features (EN)
         "menu_play":      "Play",
+        "menu_campaign":  "Campaign",
         "menu_settings":  "Settings",
         "menu_chars":     "Characters",
         "menu_quit":      "Quit",
         "menu_back":      "Back",
+        "main_menu":      "Main Menu",
+        "campaign_title": "Campaign Mode",
+        "campaign_level": "Level {n}",
+        "target_wave":    "Target Wave {n}",
+        "completed":      "COMPLETED",
+        "level_completed":"LEVEL COMPLETED",
+        "next_level":     "Next Level",
         "menu_sound":     "Sound",
         "menu_sound_on":  "ON",
         "menu_sound_off": "OFF",
@@ -1473,13 +1489,14 @@ CHARACTER_DEFS = [
 # ---------------------------------------------------------------------------
 class SaveData:
     """
-    Tek instance (game.save). Altın ve açık karakterleri tutar.
+    Tek instance (game.save). Altın, açık karakterler ve campaign ilerlemesini tutar.
     Dosya sistemi yok — hafızada saklanır, menüye dönünce korunur.
     """
     def __init__(self):
         self.total_gold    = 0
         self.unlocked_ids  = {"warrior"}   # Başlangıç karakteri açık
         self.selected_id   = "warrior"
+        self.campaign_unlocked_level = 1
 
     def unlock(self, char_id, cost):
         if self.total_gold >= cost:
@@ -1487,6 +1504,17 @@ class SaveData:
             self.unlocked_ids.add(char_id)
             return True
         return False
+
+    def complete_campaign_level(self, level):
+        if 1 <= level <= 30:
+            self.campaign_unlocked_level = max(
+                self.campaign_unlocked_level,
+                min(30, level + 1)
+            )
+
+
+def campaign_target_wave(level):
+    return 10 + (level - 1) * 2
 
 
 # ---------------------------------------------------------------------------
@@ -1539,6 +1567,7 @@ class Button:
 # ---------------------------------------------------------------------------
 class GameState(Enum):
     MENU       = auto()
+    CAMPAIGN   = auto()
     SETTINGS   = auto()
     CHARACTERS = auto()
     PLAYING    = auto()
@@ -1563,12 +1592,13 @@ class MainMenu:
     def _build_buttons(self):
         cx     = SCREEN_W // 2 - self.BTN_W // 2
         step   = self.BTN_H + self.BTN_GAP
-        start  = SCREEN_H // 2 - 10
+        start  = SCREEN_H // 2 - 45
         self.buttons = {
             "play":     Button(cx, start,           self.BTN_W, self.BTN_H, T("menu_play"),     self.font_btn),
-            "chars":    Button(cx, start + step,    self.BTN_W, self.BTN_H, T("menu_chars"),    self.font_btn),
-            "settings": Button(cx, start + step*2,  self.BTN_W, self.BTN_H, T("menu_settings"), self.font_btn),
-            "quit":     Button(cx, start + step*3,  self.BTN_W, self.BTN_H, T("menu_quit"),     self.font_btn),
+            "campaign": Button(cx, start + step,    self.BTN_W, self.BTN_H, T("menu_campaign"), self.font_btn),
+            "chars":    Button(cx, start + step*2,  self.BTN_W, self.BTN_H, T("menu_chars"),    self.font_btn),
+            "settings": Button(cx, start + step*3,  self.BTN_W, self.BTN_H, T("menu_settings"), self.font_btn),
+            "quit":     Button(cx, start + step*4,  self.BTN_W, self.BTN_H, T("menu_quit"),     self.font_btn),
         }
 
     @staticmethod
@@ -1633,9 +1663,106 @@ class MainMenu:
 
     def refresh_labels(self):
         self.buttons["play"].label     = T("menu_play")
+        self.buttons["campaign"].label = T("menu_campaign")
         self.buttons["chars"].label    = T("menu_chars")
         self.buttons["settings"].label = T("menu_settings")
         self.buttons["quit"].label     = T("menu_quit")
+
+
+# ---------------------------------------------------------------------------
+# Campaign Ekranı
+# ---------------------------------------------------------------------------
+class CampaignScreen:
+    COLS = 5
+    ROWS = 6
+    BTN_W, BTN_H = 150, 56
+    GAP_X, GAP_Y = 22, 18
+
+    def __init__(self, save: SaveData):
+        self.save = save
+        self.tick = 0
+        self.font_title = pygame.font.SysFont("segoeui", 44, bold=True)
+        self.font_btn   = pygame.font.SysFont("segoeui", 18, bold=True)
+        self.font_sm    = pygame.font.SysFont("segoeui", 14, bold=True)
+        self.font_back  = pygame.font.SysFont("segoeui", 20, bold=True)
+        self._build_buttons()
+
+    def _build_buttons(self):
+        total_w = self.COLS * self.BTN_W + (self.COLS - 1) * self.GAP_X
+        sx = SCREEN_W // 2 - total_w // 2
+        sy = 150
+        self.level_buttons = []
+        for i in range(30):
+            col = i % self.COLS
+            row = i // self.COLS
+            x = sx + col * (self.BTN_W + self.GAP_X)
+            y = sy + row * (self.BTN_H + self.GAP_Y)
+            self.level_buttons.append(
+                Button(x, y, self.BTN_W, self.BTN_H,
+                       T("campaign_level", n=i + 1), self.font_btn)
+            )
+        self.btn_back = Button(SCREEN_W // 2 - 100, SCREEN_H - 70,
+                               200, 46, T("menu_back"), self.font_back)
+
+    def handle_events(self, events):
+        mx, my = pygame.mouse.get_pos()
+        for btn in self.level_buttons:
+            btn.update(mx, my)
+        self.btn_back.update(mx, my)
+
+        for ev in events:
+            if ev.type == pygame.KEYDOWN and ev.key == pygame.K_ESCAPE:
+                return "back"
+            if self.btn_back.is_clicked(ev):
+                return "back"
+            for i, btn in enumerate(self.level_buttons):
+                level = i + 1
+                if level <= self.save.campaign_unlocked_level and btn.is_clicked(ev):
+                    return level
+        return None
+
+    def draw(self, surf):
+        self.tick += 1
+        surf.fill((8, 6, 16))
+        for y in range(0, SCREEN_H, 4):
+            t = y / SCREEN_H
+            pygame.draw.line(surf, (int(8+12*(1-t)), int(6+8*(1-t)), int(16+28*(1-t))),
+                             (0, y), (SCREEN_W, y))
+
+        title = self.font_title.render(T("campaign_title"), True, (180,140,255))
+        surf.blit(title, title.get_rect(centerx=SCREEN_W//2, y=42))
+        pygame.draw.line(surf, (80,60,140), (SCREEN_W//2-220, 104), (SCREEN_W//2+220, 104), 1)
+
+        for i, btn in enumerate(self.level_buttons):
+            level = i + 1
+            unlocked = level <= self.save.campaign_unlocked_level
+            completed = level < self.save.campaign_unlocked_level
+            btn.label = T("campaign_level", n=level)
+            btn.draw(surf)
+            rect = btn.base_rect
+
+            target = self.font_sm.render(
+                T("target_wave", n=campaign_target_wave(level)),
+                True, (155,150,195) if unlocked else (95,90,120))
+            surf.blit(target, target.get_rect(centerx=rect.centerx, y=rect.y + 34))
+
+            if completed:
+                mark = self.font_sm.render(T("completed"), True, C_GREEN)
+                surf.blit(mark, mark.get_rect(centerx=rect.centerx, y=rect.y - 16))
+            elif not unlocked:
+                locked = self.font_sm.render(T("locked"), True, C_RED)
+                cover = pygame.Surface((rect.w, rect.h), pygame.SRCALPHA)
+                cover.fill((0, 0, 0, 115))
+                surf.blit(cover, rect.topleft)
+                surf.blit(locked, locked.get_rect(center=rect.center))
+
+        self.btn_back.draw(surf)
+        pygame.display.flip()
+
+    def refresh_labels(self):
+        self.btn_back.label = T("menu_back")
+        for i, btn in enumerate(self.level_buttons):
+            btn.label = T("campaign_level", n=i + 1)
 
 
 # ---------------------------------------------------------------------------
@@ -1869,8 +1996,17 @@ class Game:
         # State machine
         self.state         = GameState.MENU
         self.main_menu     = MainMenu(self.sfx)
+        self.campaign_scr  = CampaignScreen(self.save)
         self.settings_scr  = SettingsScreen(self.sfx)
         self.char_scr      = CharacterScreen(self.save)
+        self.campaign_mode = False
+        self.campaign_level = 1
+        self.level_completed = False
+        btn_y = SCREEN_H // 2 + 90
+        self.btn_next_level = Button(SCREEN_W // 2 - 240, btn_y, 220, 52,
+                                     T("next_level"), self.font_med)
+        self.btn_completed_menu = Button(SCREEN_W // 2 + 20, btn_y, 220, 52,
+                                         T("main_menu"), self.font_med)
 
         self.reset()
 
@@ -1914,6 +2050,7 @@ class Game:
         self.tick        = 0
         self.paused      = False
         self.game_over   = False
+        self.level_completed = False
         self.upgrade_screen: Optional[UpgradeScreen] = None
         self.kills       = 0
         self.session_gold = 0         # bu oyunda kazanılan altın
@@ -1931,21 +2068,46 @@ class Game:
         # Oyun bittiyse kazanılan altını kaydet
         self.save.total_gold += self.session_gold
         self.session_gold     = 0
+        self.campaign_mode = False
         self.state = GameState.MENU
         self.main_menu.refresh_labels()
+        self.campaign_scr = CampaignScreen(self.save)
         self.char_scr = CharacterScreen(self.save)   # altın güncellendi
 
     def _go_settings(self):
         self.state = GameState.SETTINGS
         self.settings_scr.refresh_labels()
 
+    def _go_campaign(self):
+        self.state = GameState.CAMPAIGN
+        self.campaign_scr.refresh_labels()
+
     def _go_chars(self):
         self.state    = GameState.CHARACTERS
         self.char_scr = CharacterScreen(self.save)
 
-    def _go_playing(self):
+    def _go_playing(self, campaign_level=None):
+        self.campaign_mode = campaign_level is not None
+        if campaign_level is not None:
+            self.campaign_level = campaign_level
         self.reset()
         self.state = GameState.PLAYING
+
+    def _complete_campaign_level(self):
+        self.level_completed = True
+        self.paused = True
+        self.upgrade_screen = None
+        self.save.total_gold += self.session_gold
+        self.session_gold = 0
+        self.save.complete_campaign_level(self.campaign_level)
+        self.campaign_scr = CampaignScreen(self.save)
+
+    def _go_next_campaign_level(self):
+        next_level = min(30, self.campaign_level + 1)
+        if next_level <= self.save.campaign_unlocked_level:
+            self._go_playing(next_level)
+        else:
+            self._go_menu()
 
     # -----------------------------------------------------------------------
     def run(self):
@@ -1961,6 +2123,7 @@ class Game:
             if self.state == GameState.MENU:
                 action = self.main_menu.handle_events(raw)
                 if   action == "play":     self._go_playing()
+                elif action == "campaign": self._go_campaign()
                 elif action == "chars":    self._go_chars()
                 elif action == "settings": self._go_settings()
                 elif action == "quit":     pygame.quit(); sys.exit()
@@ -1969,6 +2132,19 @@ class Game:
                         if ev.type == pygame.KEYDOWN and ev.key == pygame.K_l:
                             toggle_lang(); self.main_menu.refresh_labels()
                     self.main_menu.draw(self.screen)
+
+            # ── CAMPAIGN ──────────────────────────────────────────────────
+            elif self.state == GameState.CAMPAIGN:
+                action = self.campaign_scr.handle_events(raw)
+                if action == "back":
+                    self._go_menu()
+                elif isinstance(action, int):
+                    self._go_playing(action)
+                else:
+                    for ev in raw:
+                        if ev.type == pygame.KEYDOWN and ev.key == pygame.K_l:
+                            toggle_lang(); self.campaign_scr.refresh_labels()
+                    self.campaign_scr.draw(self.screen)
 
             # ── SETTINGS ───────────────────────────────────────────────────
             elif self.state == GameState.SETTINGS:
@@ -1985,6 +2161,19 @@ class Game:
             # ── PLAYING ────────────────────────────────────────────────────
             elif self.state == GameState.PLAYING:
                 for ev in raw:
+                    if self.level_completed:
+                        mx, my = pygame.mouse.get_pos()
+                        self.btn_next_level.update(mx, my)
+                        self.btn_completed_menu.update(mx, my)
+                        if self.btn_next_level.is_clicked(ev):
+                            if self.campaign_level < 30:
+                                self._go_next_campaign_level()
+                            else:
+                                self._go_menu()
+                            break
+                        if self.btn_completed_menu.is_clicked(ev):
+                            self._go_menu(); break
+                        continue
                     if ev.type == pygame.KEYDOWN:
                         if ev.key == pygame.K_ESCAPE:
                             self._go_menu(); break
@@ -1995,7 +2184,7 @@ class Game:
                         if ev.key == pygame.K_m:
                             self.sfx.toggle_mute()
                         if self.game_over and ev.key == pygame.K_r:
-                            self._go_playing(); break
+                            self._go_playing(self.campaign_level if self.campaign_mode else None); break
                     if self.upgrade_screen:
                         result = self.upgrade_screen.handle_event(ev)
                         if result:
@@ -2004,7 +2193,7 @@ class Game:
                             self.paused = False
 
                 if self.state == GameState.PLAYING:
-                    if not self.paused and not self.game_over and not self.upgrade_screen:
+                    if not self.paused and not self.game_over and not self.upgrade_screen and not self.level_completed:
                         self._update()
                     self._draw()
 
@@ -2035,6 +2224,11 @@ class Game:
 
         # Normal spawn
         self.spawn_mgr.update(p, self.enemies, self.tick)
+
+        if (self.campaign_mode and not self.level_completed
+                and self.spawn_mgr.wave + 1 >= campaign_target_wave(self.campaign_level)):
+            self._complete_campaign_level()
+            return
 
         # ── Boss spawn ──────────────────────────────────────────────────
         if self.tick > 0 and self.tick % (BOSS_INTERVAL * FPS) == 0:
@@ -2271,7 +2465,9 @@ class Game:
 
         if self.upgrade_screen:
             self.upgrade_screen.draw(surf)
-        if self.paused and not self.upgrade_screen:
+        if self.level_completed:
+            self._draw_level_completed(surf)
+        elif self.paused and not self.upgrade_screen:
             self._draw_pause(surf)
         if self.game_over:
             self._draw_game_over(surf)
@@ -2328,6 +2524,13 @@ class Game:
             f"🪙 {T('gold')}: {self.save.total_gold + self.session_gold}", True, C_YELLOW)
         surf.blit(gold_s, (SCREEN_W - gold_s.get_width() - 12, 36))
 
+        if self.campaign_mode:
+            c_s = self.font_sm.render(
+                f"{T('campaign_level', n=self.campaign_level)}  |  "
+                f"{T('target_wave', n=campaign_target_wave(self.campaign_level))}",
+                True, (180, 175, 230))
+            surf.blit(c_s, (SCREEN_W - c_s.get_width() - 12, 56))
+
         # Drone / Taret sayısı
         if self.drones or self.turrets:
             dt_s = self.font_sm.render(
@@ -2362,6 +2565,36 @@ class Game:
         surf.blit(overlay, (0, 0))
         t = self.font_big.render(T("paused"), True, C_YELLOW)
         surf.blit(t, (SCREEN_W//2 - t.get_width()//2, SCREEN_H//2 - 30))
+
+    # -----------------------------------------------------------------------
+    def _draw_level_completed(self, surf):
+        overlay = pygame.Surface((SCREEN_W, SCREEN_H), pygame.SRCALPHA)
+        overlay.fill((0, 0, 0, 175))
+        surf.blit(overlay, (0, 0))
+
+        panel = pygame.Rect(0, 0, 560, 260)
+        panel.center = (SCREEN_W // 2, SCREEN_H // 2)
+        panel_s = pygame.Surface((panel.w, panel.h), pygame.SRCALPHA)
+        panel_s.fill((*C_UI_BG[:3], 230))
+        surf.blit(panel_s, panel.topleft)
+        pygame.draw.rect(surf, (120, 100, 220), panel, 2, border_radius=8)
+
+        title = self.font_big.render(T("level_completed"), True, C_YELLOW)
+        surf.blit(title, title.get_rect(centerx=panel.centerx, y=panel.y + 38))
+
+        sub = self.font_med.render(
+            f"{T('campaign_level', n=self.campaign_level)}  -  "
+            f"{T('target_wave', n=campaign_target_wave(self.campaign_level))}",
+            True, (200, 195, 240))
+        surf.blit(sub, sub.get_rect(centerx=panel.centerx, y=panel.y + 92))
+
+        mx, my = pygame.mouse.get_pos()
+        self.btn_next_level.update(mx, my)
+        self.btn_completed_menu.update(mx, my)
+        self.btn_next_level.label = T("next_level")
+        self.btn_completed_menu.label = T("main_menu")
+        self.btn_next_level.draw(surf)
+        self.btn_completed_menu.draw(surf)
 
     # -----------------------------------------------------------------------
     def _draw_game_over(self, surf):
