@@ -40,8 +40,17 @@ STRINGS = {
         "wave":          "Dalga",
         "restart":       "[R] Yeniden Başla   [ESC] Çıkış",
         "controls":      "WASD: Hareket  P: Duraklat  L: Dil  M: Ses  ESC: Çıkış",
-        "weapons":       "Kırbaç Lv{w}  Orb Lv{o}  Aura Lv{a}  Zırh {ar}  Regen {r}",
-        "level_up":      "⬆  SEVİYE ATLADINIZ  ⬆",
+        "weapons":       "Kırbaç Lv{w}  Orb Lv{o}  Aura Lv{a}  Boomerang Lv{b}  Zırh {ar}  Regen {r}",
+        "weapons_title": "Silahlar",
+        "wpn_whip":      "Kırbaç",
+        "wpn_orb":       "Orb",
+        "wpn_aura":      "Aura",
+        "wpn_boomerang": "Boomerang",
+        "wpn_lightning": "Yıldırım",
+        "wpn_ice":       "Buz",
+        "wpn_armor":     "Zırh",
+        "wpn_regen":     "Regen",
+        "level_up":      "SEVİYE ATLADINIZ",
         "choose":        "Bir güçlendirme seçin",
         "click_hint":    "Tıkla veya [1/2/3]",
         "hp":            "HP",
@@ -51,32 +60,46 @@ STRINGS = {
         "unmuted":       "Ses: AÇIK",
         "lang_label":    "TR",
         "upgrade_names": {
-            "MAX_HP":   "❤ Maks Sağlık",
-            "SPEED":    "⚡ Hız",
-            "WHIP":     "🔥 Kırbaç Güçlendir",
-            "ORB":      "✨ Orb Güçlendir",
-            "AURA":     "💜 Aura Güçlendir",
-            "RECOVERY": "💊 Rejenerasyon",
-            "ARMOR":    "🛡 Zırh",
+            "MAX_HP":   "Maks Sağlık",
+            "SPEED":    "Hız",
+            "WHIP":     "Kırbaç Güçlendir",
+            "ORB":      "Orb Güçlendir",
+            "AURA":       "Aura Güçlendir",
+            "BOOMERANG":  "Boomerang Güçlendir",
+            "LIGHTNING_STAFF": "Yıldırım Değneği",
+            "ICE_WAND": "Buz Değneği",
+            "RECOVERY":   "Rejenerasyon",
+            "ARMOR":    "Zırh",
         },
         "upgrade_descs": {
             "MAX_HP":   "+40 maks sağlık",
             "SPEED":    "+10% hareket hızı",
             "WHIP":     "Hasar & menzil artışı",
             "ORB":      "Yeni orb + hasar",
-            "AURA":     "Alan & hasar artışı",
-            "RECOVERY": "+1 HP/sn kazanım",
+            "AURA":       "Alan & hasar artışı",
+            "BOOMERANG":  "Hasar, hız & menzil artışı",
+            "LIGHTNING_STAFF": "Hasar & alan artışı",
+            "ICE_WAND": "Hasar & yavaşlatma artışı",
+            "RECOVERY":   "+1 HP/sn kazanım",
             "ARMOR":    "Hasar azaltma",
         },
         # Menü / yeni özellik metinleri (TR)
         "menu_play":      "Oyuna Başla",
         "menu_campaign":  "Campaign",
+        "menu_maps":      "Haritalar",
         "menu_settings":  "Ayarlar",
         "menu_chars":     "Karakterler",
         "menu_quit":      "Çıkış",
         "menu_back":      "Geri",
         "main_menu":      "Ana Menü",
         "campaign_title": "Campaign Mode",
+        "map_title":      "Harita Seç",
+        "map_start":      "Başlat",
+        "map_difficulty": "Zorluk",
+        "map_rewards":    "Ödüller",
+        "map_unlock_default": "Açık",
+        "map_unlock_survive": "5 dakika hayatta kal",
+        "map_unlock_kills":   "500 kill yap",
         "campaign_level": "Level {n}",
         "target_wave":    "Target Wave {n}",
         "completed":      "TAMAMLANDI",
@@ -94,7 +117,7 @@ STRINGS = {
         "buy":            "Satın Al",
         "owned":          "SAHİP",
         "not_enough":     "Yetersiz Altın",
-        "selected":       "✔ SEÇİLDİ",
+        "selected":       "SEÇİLDİ",
         "restart":        "[R] Yeniden Başla   [ESC] Menü",
         "controls":       "WASD: Hareket  P: Duraklat  M: Ses  ESC: Menü",
         "char_names": {
@@ -120,8 +143,17 @@ STRINGS = {
         "wave":          "Wave",
         "restart":       "[R] Restart   [ESC] Quit",
         "controls":      "WASD: Move  P: Pause  L: Language  M: Sound  ESC: Quit",
-        "weapons":       "Whip Lv{w}  Orb Lv{o}  Aura Lv{a}  Armor {ar}  Regen {r}",
-        "level_up":      "⬆  LEVEL UP  ⬆",
+        "weapons":       "Whip Lv{w}  Orb Lv{o}  Aura Lv{a}  Boomerang Lv{b}  Armor {ar}  Regen {r}",
+        "weapons_title": "Weapons",
+        "wpn_whip":      "Whip",
+        "wpn_orb":       "Orb",
+        "wpn_aura":      "Aura",
+        "wpn_boomerang": "Boomerang",
+        "wpn_lightning": "Lightning",
+        "wpn_ice":       "Ice",
+        "wpn_armor":     "Armor",
+        "wpn_regen":     "Regen",
+        "level_up":      "LEVEL UP",
         "choose":        "Choose an upgrade",
         "click_hint":    "Click or [1/2/3]",
         "hp":            "HP",
@@ -131,32 +163,46 @@ STRINGS = {
         "unmuted":       "Sound: ON",
         "lang_label":    "EN",
         "upgrade_names": {
-            "MAX_HP":   "❤ Max Health",
-            "SPEED":    "⚡ Speed",
-            "WHIP":     "🔥 Upgrade Whip",
-            "ORB":      "✨ Upgrade Orb",
-            "AURA":     "💜 Upgrade Aura",
-            "RECOVERY": "💊 Regeneration",
-            "ARMOR":    "🛡 Armor",
+            "MAX_HP":   "Max Health",
+            "SPEED":    "Speed",
+            "WHIP":     "Upgrade Whip",
+            "ORB":      "Upgrade Orb",
+            "AURA":       "Upgrade Aura",
+            "BOOMERANG":  "Upgrade Boomerang",
+            "LIGHTNING_STAFF": "Lightning Staff",
+            "ICE_WAND": "Ice Wand",
+            "RECOVERY":   "Regeneration",
+            "ARMOR":    "Armor",
         },
         "upgrade_descs": {
             "MAX_HP":   "+40 max health",
             "SPEED":    "+10% move speed",
             "WHIP":     "Damage & range boost",
             "ORB":      "New orb + damage",
-            "AURA":     "Area & damage boost",
-            "RECOVERY": "+1 HP/s recovery",
+            "AURA":       "Area & damage boost",
+            "BOOMERANG":  "Damage, speed & range boost",
+            "LIGHTNING_STAFF": "Damage & area boost",
+            "ICE_WAND": "Damage & slow boost",
+            "RECOVERY":   "+1 HP/s recovery",
             "ARMOR":    "Reduce incoming damage",
         },
         # Menu / new features (EN)
         "menu_play":      "Play",
         "menu_campaign":  "Campaign",
+        "menu_maps":      "Maps",
         "menu_settings":  "Settings",
         "menu_chars":     "Characters",
         "menu_quit":      "Quit",
         "menu_back":      "Back",
         "main_menu":      "Main Menu",
         "campaign_title": "Campaign Mode",
+        "map_title":      "Select Map",
+        "map_start":      "Start",
+        "map_difficulty": "Difficulty",
+        "map_rewards":    "Rewards",
+        "map_unlock_default": "Unlocked",
+        "map_unlock_survive": "Survive 5 minutes",
+        "map_unlock_kills":   "Reach 500 kills",
         "campaign_level": "Level {n}",
         "target_wave":    "Target Wave {n}",
         "completed":      "COMPLETED",
@@ -174,7 +220,7 @@ STRINGS = {
         "buy":            "Buy",
         "owned":          "OWNED",
         "not_enough":     "Not Enough Gold",
-        "selected":       "✔ SELECTED",
+        "selected":       "SELECTED",
         "restart":        "[R] Restart   [ESC] Menu",
         "controls":       "WASD: Move  P: Pause  M: Sound  ESC: Menu",
         "char_names": {
@@ -291,6 +337,14 @@ class SoundEngine:
         self._play(self._make('dmg',
             lambda: self._sweep_buf(200, 80, 0.18, 0.45)))
 
+    def play_lightning(self):
+        self._play(self._make('lightning',
+            lambda: self._sweep_buf(1400, 300, 0.12, 0.45)))
+
+    def play_ice(self):
+        self._play(self._make('ice',
+            lambda: self._sine_buf(1700, 0.08, 0.35, attack=0.005, decay_exp=1.5)))
+
     def play_death(self):
         self._play(self._make('death',
             lambda: self._noise_buf(0.5, 0.55)))
@@ -363,6 +417,9 @@ C_PURPLE      = (180, 80, 255)
 C_CYAN        = (60, 230, 255)
 C_RED         = (255, 60, 60)
 C_GREEN       = (80, 220, 100)
+C_BOOMERANG   = (100, 255, 180)
+C_LIGHTNING   = (255, 245, 120)
+C_ICE         = (150, 220, 255)
 
 # ---------------------------------------------------------------------------
 # Yardımcı
@@ -524,6 +581,107 @@ class AuraWeapon:
         surf.blit(aura_surf, (px - r - 1, py - r - 1))
 
 
+class Boomerang:
+    def __init__(self, x, y, angle, speed, damage, max_range):
+        self.x, self.y = float(x), float(y)
+        self.angle = angle
+        self.speed = speed
+        self.damage = damage
+        self.max_range = max_range
+        self.traveled = 0.0
+        self.returning = False
+        self.hit_set: set = set()
+        self.alive = True
+        self.color = C_BOOMERANG
+
+    def update(self, player):
+        if self.returning:
+            self.angle = angle_to((self.x, self.y), (player.x, player.y))
+            d = dist((self.x, self.y), (player.x, player.y))
+            if d < 15:
+                self.alive = False
+                return
+        self.x += math.cos(self.angle) * self.speed
+        self.y += math.sin(self.angle) * self.speed
+        if not self.returning:
+            self.traveled += self.speed
+            if self.traveled >= self.max_range:
+                self.returning = True
+                self.hit_set.clear()
+
+    def draw(self, surf, cam_x, cam_y):
+        sx = int(self.x - cam_x)
+        sy = int(self.y - cam_y)
+        if -20 < sx < SCREEN_W + 20 and -20 < sy < SCREEN_H + 20:
+            spin = pygame.time.get_ticks() * 0.018
+            size = 12
+            pts = []
+            for i in range(3):
+                a = spin + (math.tau / 3) * i
+                pts.append((sx + int(math.cos(a) * size),
+                            sy + int(math.sin(a) * size)))
+            glow = pygame.Surface((size * 4, size * 4), pygame.SRCALPHA)
+            pygame.draw.circle(glow, (*self.color, 40), (size * 2, size * 2), size * 2)
+            surf.blit(glow, (sx - size * 2, sy - size * 2))
+            pygame.draw.polygon(surf, self.color, pts)
+            pygame.draw.polygon(surf, C_WHITE, pts, 1)
+
+
+class BoomerangWeapon:
+    def __init__(self):
+        self.damage = 22
+        self.speed = 5.0
+        self.range = 250
+        self.cooldown = 0
+        self.tick = 90
+        self.level = 1
+        self.boomerangs: List[Boomerang] = []
+
+    def upgrade(self):
+        self.level += 1
+        self.damage += 8
+        self.speed += 0.5
+        self.range += 30
+        self.tick = max(45, self.tick - 8)
+
+    def update(self, player, enemies, particles, damage_numbers, sfx=None):
+        for b in self.boomerangs:
+            b.update(player)
+            if b.alive:
+                for e in enemies:
+                    if e.alive and id(e) not in b.hit_set:
+                        if dist((b.x, b.y), (e.x, e.y)) < 16 + e.radius:
+                            e.take_damage(b.damage)
+                            b.hit_set.add(id(e))
+                            damage_numbers.append(DamageNumber(e.x, e.y, b.damage, b.color))
+                            for _ in range(5):
+                                particles.append(Particle(b.x, b.y, b.color, speed=2.5))
+                            if sfx:
+                                sfx.play_hit()
+        self.boomerangs = [b for b in self.boomerangs if b.alive]
+
+        self.cooldown -= 1
+        if self.cooldown <= 0:
+            target = None
+            best = self.range + 100
+            for e in enemies:
+                d = dist((player.x, player.y), (e.x, e.y))
+                if d < best:
+                    best = d
+                    target = e
+            if target:
+                self.cooldown = self.tick
+                a = angle_to((player.x, player.y), (target.x, target.y))
+                self.boomerangs.append(Boomerang(
+                    player.x, player.y, a, self.speed, self.damage, self.range))
+            else:
+                self.cooldown = self.tick // 2
+
+    def draw(self, surf, cam_x, cam_y, player):
+        for b in self.boomerangs:
+            b.draw(surf, cam_x, cam_y)
+
+
 class WhipWeapon:
     """Periyodik olarak en yakın düşmana vuran kırbaç."""
     def __init__(self):
@@ -652,6 +810,228 @@ class OrbWeapon:
             pygame.draw.circle(surf, C_CYAN, (ox, oy), 10)
             pygame.draw.circle(surf, C_WHITE, (ox, oy), 4)
 
+class LightningBolt:
+    WARN_FRAMES = 18
+    STRIKE_FLASH_FRAMES = 10
+
+    def __init__(self, tx, ty, damage, aoe_radius, index=0):
+        self.tx, self.ty = float(tx), float(ty)
+        self.damage = damage
+        self.aoe_radius = aoe_radius
+        self.index = index
+        self.timer = self.WARN_FRAMES
+        self.struck = False
+        self.flash_timer = 0
+        self.alive = True
+
+    def _strike(self, enemies, particles, damage_numbers, sfx):
+        self.struck = True
+        self.flash_timer = self.STRIKE_FLASH_FRAMES
+        for e in enemies:
+            if not e.alive:
+                continue
+            if dist((self.tx, self.ty), (e.x, e.y)) < self.aoe_radius + e.radius:
+                e.take_damage(self.damage)
+                damage_numbers.append(DamageNumber(e.x, e.y, self.damage, C_LIGHTNING))
+                for _ in range(4):
+                    particles.append(Particle(e.x, e.y, C_LIGHTNING, speed=3))
+        if sfx:
+            sfx.play_lightning()
+
+    def update(self, player, enemies, particles, damage_numbers, sfx=None):
+        if not self.struck:
+            self.timer -= 1
+            if self.timer <= 0:
+                self._strike(enemies, particles, damage_numbers, sfx)
+        else:
+            self.flash_timer -= 1
+            if self.flash_timer <= 0:
+                self.alive = False
+
+    def draw(self, surf, cam_x, cam_y, tick):
+        sx = int(self.tx - cam_x)
+        sy = int(self.ty - cam_y)
+        if not (-60 < sx < SCREEN_W + 60 and -60 < sy < SCREEN_H + 60):
+            return
+        if not self.struck:
+            t = self.timer / self.WARN_FRAMES
+            r = max(4, int(self.aoe_radius * (0.55 + 0.45 * t)))
+            ring = pygame.Surface((r * 2 + 4, r * 2 + 4), pygame.SRCALPHA)
+            pygame.draw.circle(ring, (*C_LIGHTNING, 140), (r + 2, r + 2), r, 3)
+            surf.blit(ring, (sx - r - 2, sy - r - 2))
+        else:
+            t = self.flash_timer / self.STRIKE_FLASH_FRAMES
+            alpha = int(220 * t)
+            pygame.draw.line(surf, (*C_LIGHTNING, alpha), (sx, sy - 160), (sx, sy),
+                             max(2, int(4 * t)))
+            flash = pygame.Surface((self.aoe_radius * 2, self.aoe_radius * 2), pygame.SRCALPHA)
+            pygame.draw.circle(flash, (*C_LIGHTNING, int(90 * t)),
+                               (self.aoe_radius, self.aoe_radius), self.aoe_radius)
+            surf.blit(flash, (sx - self.aoe_radius, sy - self.aoe_radius))
+            pygame.draw.circle(surf, C_WHITE, (sx, sy), max(2, int(6 * t)))
+
+
+class LightningStaffWeapon:
+    def __init__(self):
+        self.level = 1
+        self.damage = 28
+        self.cooldown = 0
+        self.tick = 110
+        self.aoe_radius = 55
+        self.count = 1
+        self.detection_range = 480
+        self.active: List[LightningBolt] = []
+
+    def upgrade(self):
+        self.level += 1
+        self.damage += 10
+        self.tick = max(55, self.tick - 12)
+        self.aoe_radius += 6
+        if self.level >= 4 and self.count < 2:
+            self.count = 2
+
+    def _pick_targets(self, player, enemies):
+        alive = [e for e in enemies
+                 if e.alive and dist((player.x, player.y), (e.x, e.y)) <= self.detection_range]
+        alive.sort(key=lambda e: dist((player.x, player.y), (e.x, e.y)))
+        return alive[:self.count]
+
+    def update(self, player, enemies, particles, damage_numbers, sfx=None):
+        self.cooldown -= 1
+        if self.cooldown <= 0:
+            targets = self._pick_targets(player, enemies)
+            if targets:
+                self.cooldown = self.tick
+                for i, target in enumerate(targets):
+                    self.active.append(
+                        LightningBolt(target.x, target.y, self.damage, self.aoe_radius, index=i))
+            else:
+                self.cooldown = self.tick // 2
+
+        for bolt in self.active:
+            bolt.update(player, enemies, particles, damage_numbers, sfx)
+        self.active = [bolt for bolt in self.active if bolt.alive]
+
+    def draw(self, surf, cam_x, cam_y, tick):
+        for bolt in self.active:
+            bolt.draw(surf, cam_x, cam_y, tick)
+
+
+class IceShard:
+    def __init__(self, px, py, angle, damage, speed, slow_duration, slow_factor,
+                 freeze_duration, lifetime=90, size=6):
+        self.x, self.y = float(px), float(py)
+        self.vx = math.cos(angle) * speed
+        self.vy = math.sin(angle) * speed
+        self.damage = damage
+        self.slow_duration = slow_duration
+        self.slow_factor = slow_factor
+        self.freeze_duration = freeze_duration
+        self.life = lifetime
+        self.size = size
+        self.alive = True
+
+    def update(self, player, enemies, particles, damage_numbers, sfx=None):
+        self.x += self.vx
+        self.y += self.vy
+        self.life -= 1
+        if self.life <= 0:
+            self.alive = False
+            return
+
+        for e in enemies:
+            if not e.alive:
+                continue
+            if dist((self.x, self.y), (e.x, e.y)) < self.size + e.radius:
+                e.take_damage(self.damage)
+                e.apply_slow(self.slow_duration, self.slow_factor)
+                if self.freeze_duration > 0:
+                    e.apply_freeze(self.freeze_duration)
+                damage_numbers.append(DamageNumber(e.x, e.y, self.damage, C_ICE))
+                for _ in range(5):
+                    particles.append(Particle(e.x, e.y, C_ICE, speed=2.5))
+                if sfx:
+                    sfx.play_ice()
+                self.alive = False
+                return
+
+    def draw(self, surf, cam_x, cam_y):
+        sx = int(self.x - cam_x)
+        sy = int(self.y - cam_y)
+        if -20 < sx < SCREEN_W + 20 and -20 < sy < SCREEN_H + 20:
+            glow = pygame.Surface((self.size * 4, self.size * 4), pygame.SRCALPHA)
+            pygame.draw.circle(glow, (*C_ICE, 60), (self.size * 2, self.size * 2),
+                                self.size * 2)
+            surf.blit(glow, (sx - self.size * 2, sy - self.size * 2))
+            angle = math.atan2(self.vy, self.vx)
+            pts = []
+            for off, r in ((0, self.size * 1.4), (math.tau * 0.42, self.size * 0.6),
+                           (math.pi, self.size * 0.9), (-math.tau * 0.42, self.size * 0.6)):
+                a = angle + off
+                pts.append((sx + math.cos(a) * r, sy + math.sin(a) * r))
+            pygame.draw.polygon(surf, C_ICE, pts)
+            pygame.draw.polygon(surf, C_WHITE, pts, 1)
+
+
+class IceWandWeapon:
+    ICE_FREEZE_LEVEL = 5
+
+    def __init__(self):
+        self.level = 1
+        self.damage = 16
+        self.cooldown = 0
+        self.tick = 95
+        self.proj_speed = 7.0
+        self.slow_duration = 90
+        self.slow_factor = 0.55
+        self.freeze_duration = 0
+        self.detection_range = 450
+        self.active: List[IceShard] = []
+
+    def upgrade(self):
+        self.level += 1
+        self.damage += 7
+        self.tick = max(45, self.tick - 9)
+        self.proj_speed += 0.5
+        self.slow_duration += 12
+        self.slow_factor = max(0.25, self.slow_factor - 0.04)
+        if self.level >= self.ICE_FREEZE_LEVEL:
+            self.freeze_duration = min(45, 15 + (self.level - self.ICE_FREEZE_LEVEL) * 6)
+
+    def _pick_target(self, player, enemies):
+        target = None
+        best = self.detection_range
+        for e in enemies:
+            if not e.alive:
+                continue
+            d = dist((player.x, player.y), (e.x, e.y))
+            if d <= best:
+                best = d
+                target = e
+        return target
+
+    def update(self, player, enemies, particles, damage_numbers, sfx=None):
+        self.cooldown -= 1
+        if self.cooldown <= 0:
+            target = self._pick_target(player, enemies)
+            if target:
+                self.cooldown = self.tick
+                a = angle_to((player.x, player.y), (target.x, target.y))
+                self.active.append(IceShard(
+                    player.x, player.y, a, self.damage, self.proj_speed,
+                    self.slow_duration, self.slow_factor, self.freeze_duration))
+            else:
+                self.cooldown = self.tick // 2
+
+        for shard in self.active:
+            shard.update(player, enemies, particles, damage_numbers, sfx)
+        self.active = [shard for shard in self.active if shard.alive]
+
+    def draw(self, surf, cam_x, cam_y, tick):
+        for shard in self.active:
+            shard.draw(surf, cam_x, cam_y)
+
+
 # ---------------------------------------------------------------------------
 # Upgrade seçenekleri
 # ---------------------------------------------------------------------------
@@ -661,6 +1041,9 @@ class UpgradeType(Enum):
     WHIP        = auto()
     ORB         = auto()
     AURA        = auto()
+    BOOMERANG   = auto()
+    LIGHTNING_STAFF = auto()
+    ICE_WAND    = auto()
     RECOVERY    = auto()
     ARMOR       = auto()
 
@@ -670,6 +1053,9 @@ UPGRADE_COLORS = {
     UpgradeType.WHIP:     C_ORANGE,
     UpgradeType.ORB:      C_CYAN,
     UpgradeType.AURA:     C_PURPLE,
+    UpgradeType.BOOMERANG: C_CYAN,
+    UpgradeType.LIGHTNING_STAFF: C_LIGHTNING,
+    UpgradeType.ICE_WAND: C_ICE,
     UpgradeType.RECOVERY: C_GREEN,
     UpgradeType.ARMOR:    C_WHITE,
 }
@@ -680,6 +1066,9 @@ UPGRADE_KEYS = {
     UpgradeType.WHIP:     "WHIP",
     UpgradeType.ORB:      "ORB",
     UpgradeType.AURA:     "AURA",
+    UpgradeType.BOOMERANG: "BOOMERANG",
+    UpgradeType.LIGHTNING_STAFF: "LIGHTNING_STAFF",
+    UpgradeType.ICE_WAND: "ICE_WAND",
     UpgradeType.RECOVERY: "RECOVERY",
     UpgradeType.ARMOR:    "ARMOR",
 }
@@ -731,6 +1120,17 @@ class Enemy:
         # Ranged için mermi oluşturmak amacıyla referans tutulur
         self.pending_shots: List[Projectile] = []
 
+        self.slow_timer = 0
+        self.slow_factor = 1.0
+        self.frozen_timer = 0
+
+    def apply_slow(self, duration: int, factor: float) -> None:
+        self.slow_timer = max(self.slow_timer, duration)
+        self.slow_factor = min(self.slow_factor, factor)
+
+    def apply_freeze(self, duration: int) -> None:
+        self.frozen_timer = max(self.frozen_timer, duration)
+
     def take_damage(self, amount):
         self.hp -= amount
         self.hit_flash = 8
@@ -746,13 +1146,21 @@ class Enemy:
         self.kbx *= 0.8
         self.kby *= 0.8
 
+        if self.frozen_timer > 0:
+            self.frozen_timer -= 1
+        if self.slow_timer > 0:
+            self.slow_timer -= 1
+            if self.slow_timer <= 0:
+                self.slow_factor = 1.0
+
         # Oyuncuya doğru git
+        effective_speed = 0.0 if self.frozen_timer > 0 else self.speed * self.slow_factor
         dx = player.x - self.x
         dy = player.y - self.y
         d = math.hypot(dx, dy)
-        if d > 0:
-            self.x += (dx / d) * self.speed
-            self.y += (dy / d) * self.speed
+        if d > 0 and effective_speed > 0:
+            self.x += (dx / d) * effective_speed
+            self.y += (dy / d) * effective_speed
 
         # Dünya sınırları
         self.x = clamp(self.x, 0, WORLD_W)
@@ -780,8 +1188,17 @@ class Enemy:
         if sx + r < 0 or sx - r > SCREEN_W or sy + r < 0 or sy - r > SCREEN_H:
             return
 
-        color = C_WHITE if self.hit_flash > 0 else self.color
+        if self.hit_flash > 0:
+            color = C_WHITE
+        elif self.frozen_timer > 0:
+            color = C_ICE
+        elif self.slow_timer > 0:
+            color = tuple(int(c * 0.7 + 130 * 0.3) for c in self.color)
+        else:
+            color = self.color
         pygame.draw.circle(surf, color, (sx, sy), r)
+        if self.frozen_timer > 0:
+            pygame.draw.circle(surf, (200, 240, 255), (sx, sy), r + 2, 2)
         # Tank için dışında halka
         if self.etype == EnemyType.TANK:
             pygame.draw.circle(surf, C_WHITE, (sx, sy), r + 3, 2)
@@ -855,9 +1272,10 @@ class Player:
         self.xp_needed = 10
 
         # Silahlar
-        self.whip  = WhipWeapon()
-        self.orb   = OrbWeapon()
-        self.aura  = AuraWeapon()
+        self.whip     = WhipWeapon()
+        self.orb      = OrbWeapon()
+        self.aura     = AuraWeapon()
+        self.boomerang = BoomerangWeapon()
 
         self.angle = 0.0  # görsel yön
 
@@ -1043,12 +1461,13 @@ class UpgradeScreen:
 # Spawn yöneticisi
 # ---------------------------------------------------------------------------
 class SpawnManager:
-    def __init__(self):
+    def __init__(self, map_def=None):
         self.timer = 0
         self.wave = 0
         self.wave_timer = 0
         self.base_rate = 120  # frame/spawn
         self.horde_cd = 0
+        self.map_def = map_def or MAP_DEFS[0]
 
     def update(self, player, enemies, tick):
         self.timer += 1
@@ -1058,7 +1477,7 @@ class SpawnManager:
         wave = tick // (30 * FPS)
         self.wave = wave
 
-        rate = max(20, self.base_rate - wave * 5)
+        rate = max(20, int((self.base_rate - wave * 5) * self.map_def.get("spawn_rate_mult", 1.0)))
 
         if self.timer >= rate:
             self.timer = 0
@@ -1066,7 +1485,8 @@ class SpawnManager:
 
         # Her 60 saniyede bir horde
         if tick > 0 and tick % (60 * FPS) == 0:
-            for _ in range(20 + wave * 5):
+            horde_count = int((20 + wave * 5) * self.map_def.get("horde_mult", 1.0))
+            for _ in range(horde_count):
                 self._spawn(player, enemies, wave)
 
     def _spawn(self, player, enemies, wave):
@@ -1164,6 +1584,16 @@ class Boss:
         self.shoot_cd   = 90          # mermi cooldown
         self.kbx = self.kby = 0.0
         self.angle      = 0.0         # görsel spin
+        self.slow_timer = 0
+        self.slow_factor = 1.0
+        self.frozen_timer = 0
+
+    def apply_slow(self, duration: int, factor: float) -> None:
+        self.slow_timer = max(self.slow_timer, duration)
+        self.slow_factor = min(self.slow_factor, factor)
+
+    def apply_freeze(self, duration: int) -> None:
+        self.frozen_timer = max(self.frozen_timer, duration)
 
     def take_damage(self, amount):
         self.hp -= amount
@@ -1177,12 +1607,20 @@ class Boss:
         self.angle += 0.03
         self.x += self.kbx;  self.kbx *= 0.8
         self.y += self.kby;  self.kby *= 0.8
+        if self.frozen_timer > 0:
+            self.frozen_timer -= 1
+        if self.slow_timer > 0:
+            self.slow_timer -= 1
+            if self.slow_timer <= 0:
+                self.slow_factor = 1.0
+
+        effective_speed = 0.0 if self.frozen_timer > 0 else self.speed * self.slow_factor
         dx = player.x - self.x
         dy = player.y - self.y
         d  = math.hypot(dx, dy)
-        if d > 0:
-            self.x += (dx / d) * self.speed
-            self.y += (dy / d) * self.speed
+        if d > 0 and effective_speed > 0:
+            self.x += (dx / d) * effective_speed
+            self.y += (dy / d) * effective_speed
         self.x = clamp(self.x, 0, WORLD_W)
         self.y = clamp(self.y, 0, WORLD_H)
         if self.hit_flash > 0:
@@ -1215,10 +1653,19 @@ class Boss:
             pygame.draw.circle(ring_surf, (*self.RING_COLOR, 180), (px, py), 5)
         surf.blit(ring_surf, (sx - rc, sy - rc))
         # Gövde
-        color = C_WHITE if self.hit_flash > 0 else self.COLOR
+        if self.hit_flash > 0:
+            color = C_WHITE
+        elif self.frozen_timer > 0:
+            color = C_ICE
+        elif self.slow_timer > 0:
+            color = tuple(int(c * 0.7 + 130 * 0.3) for c in self.COLOR)
+        else:
+            color = self.COLOR
         pygame.draw.circle(surf, (120, 10, 100), (sx, sy), r)
         pygame.draw.circle(surf, color, (sx, sy), r - 4)
         pygame.draw.circle(surf, self.RING_COLOR, (sx, sy), r - 4, 3)
+        if self.frozen_timer > 0:
+            pygame.draw.circle(surf, (200, 240, 255), (sx, sy), r + 2, 2)
         # HP çubuğu (geniş)
         bw = r * 3
         bx = sx - r - r // 2
@@ -1484,6 +1931,65 @@ CHARACTER_DEFS = [
     },
 ]
 
+
+# ---------------------------------------------------------------------------
+# Haritalar: menü, önizleme, kilit durumu ve oynanış modifierleri
+# ---------------------------------------------------------------------------
+MAP_DEFS = [
+    {
+        "id": "meadow",
+        "name": "Meadow",
+        "desc": "Balanced open field.",
+        "difficulty": "Normal",
+        "unlock_key": "map_unlock_default",
+        "bg": C_BG,
+        "grid": C_GRID,
+        "preview": (28, 24, 42),
+        "spawn_rate_mult": 1.0,
+        "horde_mult": 1.0,
+        "boss_interval_mult": 1.0,
+        "xp_mult": 1.0,
+        "gold_mult": 1.0,
+    },
+    {
+        "id": "library",
+        "name": "Library",
+        "desc": "Dense corridors with faster pressure and better XP.",
+        "difficulty": "Hard",
+        "unlock_key": "map_unlock_survive",
+        "bg": (10, 12, 22),
+        "grid": (42, 36, 62),
+        "preview": (36, 28, 58),
+        "spawn_rate_mult": 0.88,
+        "horde_mult": 1.25,
+        "boss_interval_mult": 1.0,
+        "xp_mult": 1.15,
+        "gold_mult": 1.05,
+    },
+    {
+        "id": "crypt",
+        "name": "Crypt",
+        "desc": "Riskier elites and stronger gold rewards.",
+        "difficulty": "Expert",
+        "unlock_key": "map_unlock_kills",
+        "bg": (8, 14, 13),
+        "grid": (26, 48, 42),
+        "preview": (24, 54, 44),
+        "spawn_rate_mult": 1.08,
+        "horde_mult": 0.9,
+        "boss_interval_mult": 1.2,
+        "xp_mult": 0.95,
+        "gold_mult": 1.35,
+    },
+]
+
+
+def get_map_def(map_id):
+    for mdef in MAP_DEFS:
+        if mdef["id"] == map_id:
+            return mdef
+    return MAP_DEFS[0]
+
 # ---------------------------------------------------------------------------
 # Kalıcı veri (altın + açık karakterler — oyun oturumu boyunca saklanır)
 # ---------------------------------------------------------------------------
@@ -1496,6 +2002,10 @@ class SaveData:
         self.total_gold    = 0
         self.unlocked_ids  = {"warrior"}   # Başlangıç karakteri açık
         self.selected_id   = "warrior"
+        self.unlocked_map_ids = {"meadow"}
+        self.selected_map_id = "meadow"
+        self.best_survival_seconds = 0
+        self.best_kills = 0
         self.campaign_unlocked_level = 1
 
     def unlock(self, char_id, cost):
@@ -1511,6 +2021,14 @@ class SaveData:
                 self.campaign_unlocked_level,
                 min(30, level + 1)
             )
+
+    def record_run(self, elapsed_seconds, kills):
+        self.best_survival_seconds = max(self.best_survival_seconds, elapsed_seconds)
+        self.best_kills = max(self.best_kills, kills)
+        if self.best_survival_seconds >= 300:
+            self.unlocked_map_ids.add("library")
+        if self.best_kills >= 500:
+            self.unlocked_map_ids.add("crypt")
 
 
 def campaign_target_wave(level):
@@ -1567,6 +2085,7 @@ class Button:
 # ---------------------------------------------------------------------------
 class GameState(Enum):
     MENU       = auto()
+    MAP_SELECT = auto()
     CAMPAIGN   = auto()
     SETTINGS   = auto()
     CHARACTERS = auto()
@@ -1656,7 +2175,7 @@ class MainMenu:
         pygame.draw.line(surf, (80,60,140), (SCREEN_W//2-160, line_y), (SCREEN_W//2+160, line_y), 1)
         for btn in self.buttons.values():
             btn.draw(surf)
-        ver = self.font_ver.render("v2.0 — Boss · Altın · Karakter · Sandık · Drone · Taret",
+        ver = self.font_ver.render("v2.0 - Boss Altın Karakter Sandık Drone Taret",
                                    True, (60,55,90))
         surf.blit(ver, (12, SCREEN_H - 20))
         pygame.display.flip()
@@ -1903,7 +2422,7 @@ class CharacterScreen:
         title = self.font_title.render(T("menu_chars"), True, (180,140,255))
         surf.blit(title, title.get_rect(centerx=SCREEN_W//2, y=28))
         # Altın gösterge
-        gold_s = self.font_gold.render(f"🪙 {self.save.total_gold}", True, C_YELLOW)
+        gold_s = self.font_gold.render(f"{T('gold')}: {self.save.total_gold}", True, C_YELLOW)
         surf.blit(gold_s, (SCREEN_W - gold_s.get_width() - 20, 30))
 
         rects = self._card_rects()
@@ -1949,14 +2468,14 @@ class CharacterScreen:
                 lbl_s = self.font_cost.render(T("owned"), True, (140,220,140))
             else:
                 cost_s = self.font_cost.render(
-                    f"🪙 {cdef['cost']}  {T('buy')}", True,
+                    f"{cdef['cost']}  {T('buy')}", True,
                     C_YELLOW if self.save.total_gold >= cdef["cost"] else C_RED)
                 lbl_s  = cost_s
             surf.blit(lbl_s, lbl_s.get_rect(centerx=rect.centerx, y=rect.y + 158))
 
             # Kilit simgesi (sahip değilse)
             if not owned:
-                lock_s = self.font_desc.render("🔒 " + T("locked"), True, (160,100,100))
+                lock_s = self.font_desc.render(T("locked"), True, (160,100,100))
                 surf.blit(lock_s, lock_s.get_rect(centerx=rect.centerx, y=rect.y + 10))
 
         self.btn_back.draw(surf)
@@ -2029,6 +2548,8 @@ class Game:
         cdef = next(c for c in CHARACTER_DEFS if c["id"] == self.save.selected_id)
         self.player       = Player(WORLD_W // 2, WORLD_H // 2,
                                    character_id=cdef["id"], color=cdef["color"])
+        self.player.lightning_staff = LightningStaffWeapon()
+        self.player.ice_wand = IceWandWeapon()
         self._apply_char_mods()
 
         self.enemies:       List[Enemy]       = []
@@ -2204,8 +2725,11 @@ class Game:
         elif ut == UpgradeType.SPEED:  p.speed_mult *= 1.10
         elif ut == UpgradeType.WHIP:   p.whip.upgrade()
         elif ut == UpgradeType.ORB:    p.orb.upgrade()
-        elif ut == UpgradeType.AURA:   p.aura.upgrade()
-        elif ut == UpgradeType.RECOVERY: p.recovery += 1
+        elif ut == UpgradeType.AURA:      p.aura.upgrade()
+        elif ut == UpgradeType.BOOMERANG: p.boomerang.upgrade()
+        elif ut == UpgradeType.LIGHTNING_STAFF: p.lightning_staff.upgrade()
+        elif ut == UpgradeType.ICE_WAND: p.ice_wand.upgrade()
+        elif ut == UpgradeType.RECOVERY:  p.recovery += 1
         elif ut == UpgradeType.ARMOR:  p.armor += 2
 
     # -----------------------------------------------------------------------
@@ -2250,6 +2774,9 @@ class Game:
         p.whip.update(p, self.enemies + self.bosses, self.particles, self.damage_numbers, self.sfx)
         p.orb.update(p,  self.enemies + self.bosses, self.particles, self.damage_numbers, self.sfx)
         p.aura.update(p, self.enemies + self.bosses, self.particles, self.damage_numbers, self.sfx)
+        p.boomerang.update(p, self.enemies + self.bosses, self.particles, self.damage_numbers, self.sfx)
+        p.lightning_staff.update(p, self.enemies + self.bosses, self.particles, self.damage_numbers, self.sfx)
+        p.ice_wand.update(p, self.enemies + self.bosses, self.particles, self.damage_numbers, self.sfx)
 
         # ── Drone güncelle ──────────────────────────────────────────────
         all_enemies = self.enemies + self.bosses
@@ -2424,10 +2951,13 @@ class Game:
         for coin in self.gold_coins:
             coin.draw(surf, cx, cy)
 
-        # Aura / Orb / Whip
+        # Aura / Orb / Whip / Boomerang
         self.player.aura.draw(surf, cx, cy, self.player, self.tick)
         self.player.orb.draw(surf,  cx, cy, self.player, self.tick)
         self.player.whip.draw(surf, cx, cy, self.player)
+        self.player.boomerang.draw(surf, cx, cy, self.player)
+        self.player.lightning_staff.draw(surf, cx, cy, self.tick)
+        self.player.ice_wand.draw(surf, cx, cy, self.tick)
 
         # Dronelar
         for drone in self.drones:
@@ -2507,11 +3037,7 @@ class Game:
             True, C_YELLOW)
         surf.blit(info, (SCREEN_W//2 - info.get_width()//2, 12))
 
-        # Silah seviyeleri (sol alt)
-        wl = self.font_sm.render(
-            T("weapons", w=p.whip.level, o=p.orb.level, a=p.aura.level,
-              ar=p.armor, r=p.recovery), True, (180,180,220))
-        surf.blit(wl, (16, SCREEN_H - 24))
+        self._draw_weapons_panel(surf)
 
         # Sağ üst: ses + dil
         mute_label = T("muted") if self.sfx.muted else T("unmuted")
@@ -2521,7 +3047,7 @@ class Game:
 
         # Altın (sağ üst, ikinci satır)
         gold_s = self.font_sm.render(
-            f"🪙 {T('gold')}: {self.save.total_gold + self.session_gold}", True, C_YELLOW)
+            f"{T('gold')}: {self.save.total_gold + self.session_gold}", True, C_YELLOW)
         surf.blit(gold_s, (SCREEN_W - gold_s.get_width() - 12, 36))
 
         if self.campaign_mode:
@@ -2541,6 +3067,48 @@ class Game:
         # Kontrol ipuçları (alt orta)
         hint = self.font_sm.render(T("controls"), True, (100,100,140))
         surf.blit(hint, (SCREEN_W//2 - hint.get_width()//2, SCREEN_H - 24))
+
+    # -----------------------------------------------------------------------
+    def _draw_weapons_panel(self, surf):
+        p = self.player
+
+        if not hasattr(self, "_wpn_font_title"):
+            self._wpn_font_title = pygame.font.SysFont("segoeui", 14, bold=True)
+            self._wpn_font_row   = pygame.font.SysFont("segoeui", 13)
+
+        rows = [
+            (T("wpn_whip"),      f"Lv{p.whip.level}"),
+            (T("wpn_orb"),       f"Lv{p.orb.level}"),
+            (T("wpn_aura"),      f"Lv{p.aura.level}"),
+            (T("wpn_boomerang"), f"Lv{p.boomerang.level}"),
+            (T("wpn_lightning"), f"Lv{p.lightning_staff.level}"),
+            (T("wpn_ice"),       f"Lv{p.ice_wand.level}"),
+            (T("wpn_armor"),     f"{p.armor}"),
+            (T("wpn_regen"),     f"{p.recovery}"),
+        ]
+
+        PANEL_W  = 172
+        ROW_H    = 19
+        PAD      = 6
+        panel_h  = 22 + len(rows) * ROW_H + PAD
+
+        px = SCREEN_W - PANEL_W - 16
+        py = 100 if self.campaign_mode else 80
+
+        panel_s = pygame.Surface((PANEL_W, panel_h), pygame.SRCALPHA)
+        panel_s.fill((12, 10, 22, 180))
+        surf.blit(panel_s, (px, py))
+        pygame.draw.rect(surf, (70, 60, 120), (px, py, PANEL_W, panel_h), 1, border_radius=4)
+
+        title_s = self._wpn_font_title.render(T("weapons_title"), True, (180, 160, 255))
+        surf.blit(title_s, (px + PAD, py + 4))
+
+        for i, (label, value_str) in enumerate(rows):
+            ry = py + 22 + i * ROW_H
+            lbl_s = self._wpn_font_row.render(str(label), True, (200, 195, 240))
+            surf.blit(lbl_s, (px + PAD, ry))
+            val_s = self._wpn_font_row.render(value_str, True, C_YELLOW)
+            surf.blit(val_s, (px + PANEL_W - val_s.get_width() - PAD, ry))
 
     # -----------------------------------------------------------------------
     def _draw_boss_alert(self, surf):
@@ -2608,7 +3176,7 @@ class Game:
             (f"{T('time')}: {mins:02d}:{secs:02d}",  self.font_med, C_WHITE),
             (f"{T('level')}: {self.player.level}",   self.font_med, C_YELLOW),
             (f"{T('kill')}: {self.kills}",            self.font_med, C_ORANGE),
-            (f"🪙 {T('gold')}: {self.save.total_gold}",self.font_med, C_YELLOW),
+            (f"{T('gold')}: {self.save.total_gold}",self.font_med, C_YELLOW),
             ("",                                      self.font_sm,  C_WHITE),
             (T("restart"),                            self.font_med, (160,160,200)),
         ]
