@@ -25,6 +25,352 @@ from typing import List, Optional
 from enum import Enum, auto
 
 # ---------------------------------------------------------------------------
+# Başarım sistemi
+# ---------------------------------------------------------------------------
+TOAST_W        = 300
+TOAST_H        = 60
+TOAST_DURATION = 210
+TOAST_SLIDE    = 18
+TOAST_FADE     = 30
+TOAST_PAD_R    = 16
+TOAST_PAD_B    = 70
+
+class AchievementID(Enum):
+    FIRST_BLOOD     = auto()
+    MONSTER_SLAYER  = auto()
+    SURVIVOR        = auto()
+    RICH            = auto()
+    BOSS_HUNTER     = auto()
+    TREASURE_SEEKER = auto()
+
+
+@dataclass(frozen=True)
+class AchievementDef:
+    id:    AchievementID
+    icon:  str
+    title: str
+    desc:  str
+
+
+ACHIEVEMENT_DEFS: List[AchievementDef] = [
+    AchievementDef(AchievementID.FIRST_BLOOD,     "", "First Blood",     "İlk düşmanı öldür"),
+    AchievementDef(AchievementID.MONSTER_SLAYER,  "", "Monster Slayer",  "100 düşman öldür"),
+    AchievementDef(AchievementID.SURVIVOR,        "", "Survivor",        "10 dakika hayatta kal"),
+    AchievementDef(AchievementID.RICH,            "", "Rich",            "1000 altın biriktir"),
+    AchievementDef(AchievementID.BOSS_HUNTER,     "", "Boss Hunter",     "İlk boss'u öldür"),
+    AchievementDef(AchievementID.TREASURE_SEEKER, "", "Treasure Seeker", "10 sandık aç"),
+]
+_DEF_BY_ID: dict = {d.id: d for d in ACHIEVEMENT_DEFS}
+
+
+@dataclass
+class _Toast:
+    ach_id: AchievementID
+    timer:  int = TOAST_DURATION
+
+    @property
+    def slide_offset(self) -> float:
+        frames_elapsed = TOAST_DURATION - self.timer
+        if frames_elapsed < TOAST_SLIDE:
+            return TOAST_W * (1.0 - frames_elapsed / TOAST_SLIDE)
+        return 0.0
+
+    @property
+    def alpha(self) -> int:
+        if self.timer < TOAST_FADE:
+            return int(255 * self.timer / TOAST_FADE)
+        return 255
+
+    def update(self) -> bool:
+        self.timer -= 1
+        return self.timer > 0
+
+
+class AchievementManager:
+    def __init__(self, save) -> None:
+        self._save   = save
+        self._queue: List[_Toast]      = []
+        self._active: Optional[_Toast] = None
+        self._f_label = None
+        self._f_title = None
+        self._f_desc  = None
+
+    def notify_kill(self, total_kills: int) -> None:
+        if total_kills >= 1:
+            self._unlock(AchievementID.FIRST_BLOOD)
+        if total_kills >= 100:
+            self._unlock(AchievementID.MONSTER_SLAYER)
+
+    def notify_boss_kill(self) -> None:
+        self._unlock(AchievementID.BOSS_HUNTER)
+
+    def notify_chest_open(self) -> None:
+        self._save.chest_opens += 1
+        if self._save.chest_opens >= 10:
+            self._unlock(AchievementID.TREASURE_SEEKER)
+
+    def notify_time(self, elapsed_secs: int) -> None:
+        if elapsed_secs >= 600:
+            self._unlock(AchievementID.SURVIVOR)
+
+    def notify_gold(self, session_gold: int) -> None:
+        if self._save.total_gold + self._save.lifetime_gold + session_gold >= 1000:
+            self._unlock(AchievementID.RICH)
+
+    def _unlock(self, aid: AchievementID) -> None:
+        if aid in self._save.unlocked_achievements:
+            return
+        self._save.unlocked_achievements.add(aid)
+        self._queue.append(_Toast(ach_id=aid))
+
+    def _tick_queue(self) -> None:
+        if self._active is not None:
+            if not self._active.update():
+                self._active = None
+        if self._active is None and self._queue:
+            self._active = self._queue.pop(0)
+
+    def draw(self, surf, screen_w: int, screen_h: int) -> None:
+        self._tick_queue()
+        if self._active is None:
+            return
+        if self._f_label is None:
+            self._f_label = pygame.font.SysFont("segoeui", 12)
+            self._f_title = pygame.font.SysFont("segoeui", 15, bold=True)
+            self._f_desc  = pygame.font.SysFont("segoeui", 13)
+        toast = self._active
+        defn  = _DEF_BY_ID[toast.ach_id]
+        alpha = toast.alpha
+        tx = int(screen_w - TOAST_W - TOAST_PAD_R + toast.slide_offset)
+        ty = screen_h - TOAST_H - TOAST_PAD_B
+        bg = pygame.Surface((TOAST_W, TOAST_H), pygame.SRCALPHA)
+        bg.fill((18, 14, 35, int(220 * alpha / 255)))
+        surf.blit(bg, (tx, ty))
+        border = pygame.Surface((TOAST_W, TOAST_H), pygame.SRCALPHA)
+        border.set_alpha(alpha)
+        pygame.draw.rect(border, (200, 170, 50), (0, 0, TOAST_W, TOAST_H), 2, border_radius=6)
+        surf.blit(border, (tx, ty))
+        strip = pygame.Surface((4, TOAST_H - 4), pygame.SRCALPHA)
+        strip.fill((220, 190, 60, alpha))
+        surf.blit(strip, (tx + 2, ty + 2))
+        text_x = tx + 14
+        label_s = self._f_label.render("BAŞARIM AÇILDI!", True, (200, 170, 50))
+        label_s.set_alpha(alpha)
+        surf.blit(label_s, (text_x, ty + 7))
+        title = f"{defn.icon}  {defn.title}" if defn.icon else defn.title
+        title_s = self._f_title.render(title, True, (240, 235, 255))
+        title_s.set_alpha(alpha)
+        surf.blit(title_s, (text_x, ty + 22))
+        desc_s = self._f_desc.render(defn.desc, True, (160, 155, 195))
+        desc_s.set_alpha(alpha)
+        surf.blit(desc_s, (text_x, ty + 40))
+
+    def all_statuses(self) -> List[tuple]:
+        return [(defn, defn.id in self._save.unlocked_achievements) for defn in ACHIEVEMENT_DEFS]
+
+# ---------------------------------------------------------------------------
+# Görev sistemi
+# ---------------------------------------------------------------------------
+class QuestType(Enum):
+    KILL    = auto()
+    SURVIVE = auto()
+    GOLD    = auto()
+
+
+@dataclass
+class Quest:
+    qtype:    QuestType
+    target:   int
+    reward:   int
+    progress: int  = 0
+    done:     bool = False
+    notified: bool = False
+
+    def advance(self, amount: int = 1):
+        if self.done:
+            return False
+        self.progress = min(self.target, self.progress + amount)
+        if self.progress >= self.target:
+            self.done = True
+            return True
+        return False
+
+    def label(self) -> str:
+        if self.qtype == QuestType.KILL:
+            return T("quest_kill", n=self.target)
+        elif self.qtype == QuestType.SURVIVE:
+            return T("quest_survive", n=self.target)
+        else:
+            return T("quest_gold", n=self.target)
+
+    def progress_str(self) -> str:
+        return f"{min(self.progress, self.target)}/{self.target}"
+
+
+class QuestManager:
+    MAX_ACTIVE      = 4
+    UNLOCK_INTERVAL = 120
+    PANEL_X         = 16
+    PANEL_W         = 230
+    NOTIF_DURATION  = 180
+
+    def __init__(self):
+        self.quests:       List[Quest] = []
+        self.completed:    List[Quest] = []
+        self.pending_pool: List[Quest] = []
+        self.next_unlock_tick = self.UNLOCK_INTERVAL * 60
+        self.notif_queue:     List[list] = []
+        self.new_quest_notif: List[list] = []
+        self._font_title = None
+        self._font_item  = None
+        self._font_prog  = None
+        self._build_initial()
+
+    def _make_quest(self, qtype: QuestType, tier: int) -> Quest:
+        if qtype == QuestType.KILL:
+            targets = [20,  50,  100, 200]
+            rewards = [30,  60,  100, 180]
+        elif qtype == QuestType.SURVIVE:
+            targets = [2,   4,   7,   12]
+            rewards = [25,  55,  90,  160]
+        else:
+            targets = [50,  120, 250, 500]
+            rewards = [35,  70,  110, 200]
+        t = max(0, min(3, tier))
+        return Quest(qtype=qtype, target=targets[t], reward=rewards[t])
+
+    def _build_initial(self):
+        types = [QuestType.KILL, QuestType.SURVIVE, QuestType.GOLD]
+        random.shuffle(types)
+        for qt in types:
+            self.quests.append(self._make_quest(qt, tier=0))
+        pool_defs = [
+            (QuestType.KILL,    1), (QuestType.SURVIVE, 1), (QuestType.GOLD,    1),
+            (QuestType.KILL,    2), (QuestType.SURVIVE, 2), (QuestType.GOLD,    2),
+            (QuestType.KILL,    3), (QuestType.SURVIVE, 3), (QuestType.GOLD,    3),
+        ]
+        random.shuffle(pool_defs)
+        for qt, tier in pool_defs:
+            self.pending_pool.append(self._make_quest(qt, tier))
+
+    def update(self, tick: int, kills_delta: int, gold_delta: int, elapsed_secs: int):
+        newly_done: List[Quest] = []
+        for q in self.quests:
+            if q.done:
+                continue
+            if q.qtype == QuestType.KILL and kills_delta > 0:
+                if q.advance(kills_delta):
+                    newly_done.append(q)
+            elif q.qtype == QuestType.SURVIVE:
+                mins = elapsed_secs // 60
+                q.progress = min(q.target, mins)
+                if q.progress >= q.target:
+                    q.done = True
+                    newly_done.append(q)
+            elif q.qtype == QuestType.GOLD and gold_delta > 0:
+                if q.advance(gold_delta):
+                    newly_done.append(q)
+
+        for q in newly_done:
+            if not q.notified:
+                q.notified = True
+                self.notif_queue.append(
+                    [T("quest_complete_notif", r=q.reward), self.NOTIF_DURATION, q.reward])
+                self.completed.append(q)
+
+        self.notif_queue     = [[m, t - 1, r] for m, t, r in self.notif_queue     if t > 1]
+        self.new_quest_notif = [[m, t - 1]    for m, t    in self.new_quest_notif if t > 1]
+
+        if (tick >= self.next_unlock_tick
+                and self.pending_pool
+                and len([q for q in self.quests if not q.done]) < self.MAX_ACTIVE):
+            new_q = self.pending_pool.pop(0)
+            self.quests.append(new_q)
+            self.new_quest_notif.append([T("quest_new"), self.NOTIF_DURATION])
+            self.next_unlock_tick = tick + self.UNLOCK_INTERVAL * 60
+
+    def collect_rewards(self) -> int:
+        total = sum(q.reward for q in self.completed)
+        self.completed.clear()
+        return total
+
+    def draw_panel(self, surf, screen_h: int):
+        if self._font_title is None:
+            self._font_title = pygame.font.SysFont("segoeui", 14, bold=True)
+            self._font_item  = pygame.font.SysFont("segoeui", 13)
+            self._font_prog  = pygame.font.SysFont("segoeui", 12)
+
+        active = [q for q in self.quests if not q.done][:self.MAX_ACTIVE]
+        if not active:
+            return
+
+        ROW_H   = 44
+        PAD     = 6
+        panel_h = 22 + len(active) * ROW_H + PAD
+        px      = self.PANEL_X
+        py      = 65
+
+        panel_s = pygame.Surface((self.PANEL_W, panel_h), pygame.SRCALPHA)
+        panel_s.fill((12, 10, 22, 180))
+        surf.blit(panel_s, (px, py))
+        pygame.draw.rect(surf, (70, 60, 120), (px, py, self.PANEL_W, panel_h), 1, border_radius=4)
+
+        title_s = self._font_title.render(T("quests_title"), True, (180, 160, 255))
+        surf.blit(title_s, (px + PAD, py + 4))
+
+        for i, q in enumerate(active):
+            ry = py + 22 + i * ROW_H
+            row_s = pygame.Surface((self.PANEL_W - 2, ROW_H - 2), pygame.SRCALPHA)
+            row_s.fill((20, 18, 40, 100))
+            surf.blit(row_s, (px + 1, ry))
+
+            lbl = self._font_item.render(q.label(), True, (200, 195, 240))
+            surf.blit(lbl, (px + PAD, ry + 3))
+
+            bar_w = self.PANEL_W - PAD * 2 - 50
+            bar_h = 6
+            bar_x = px + PAD
+            bar_y = ry + 22
+            ratio = q.progress / q.target if q.target > 0 else 0
+            pygame.draw.rect(surf, (40, 35, 60), (bar_x, bar_y, bar_w, bar_h), border_radius=3)
+            if ratio > 0:
+                fill_c = (100, 220, 120) if ratio > 0.75 else (80, 160, 255)
+                pygame.draw.rect(surf, fill_c,
+                                 (bar_x, bar_y, int(bar_w * ratio), bar_h), border_radius=3)
+            pygame.draw.rect(surf, (60, 55, 90), (bar_x, bar_y, bar_w, bar_h), 1, border_radius=3)
+
+            prog_s = self._font_prog.render(q.progress_str(), True, (140, 135, 180))
+            surf.blit(prog_s, (bar_x + bar_w + 4, bar_y - 2))
+
+            rew_s = self._font_prog.render(T("quest_reward", r=q.reward), True, (255, 215, 0))
+            surf.blit(rew_s, (px + self.PANEL_W - rew_s.get_width() - PAD, ry + 3))
+
+    def draw_notifications(self, surf, screen_w: int, start_y: int = 80):
+        if self._font_title is None:
+            return
+        font_notif = pygame.font.SysFont("segoeui", 20, bold=True)
+        offset_y = start_y
+        for msg, t, *_ in self.notif_queue:
+            alpha  = min(255, t * 4)
+            ns     = font_notif.render(msg, True, (255, 215, 0))
+            ns.set_alpha(alpha)
+            nx = screen_w // 2 - ns.get_width() // 2
+            ny = offset_y
+            bg_s = pygame.Surface((ns.get_width() + 24, ns.get_height() + 8), pygame.SRCALPHA)
+            bg_s.fill((10, 8, 20, min(180, alpha)))
+            bg_s.set_alpha(alpha)
+            surf.blit(bg_s, (nx - 12, ny - 4))
+            surf.blit(ns, (nx, ny))
+            offset_y += ns.get_height() + 12
+
+        font_new = pygame.font.SysFont("segoeui", 17, bold=True)
+        for msg, t in self.new_quest_notif:
+            alpha = min(255, t * 5)
+            ns    = font_new.render(msg, True, (120, 200, 255))
+            ns.set_alpha(alpha)
+            surf.blit(ns, (screen_w - ns.get_width() - 16, 76))
+
+# ---------------------------------------------------------------------------
 # Dil sistemi (TR / EN)
 # ---------------------------------------------------------------------------
 LANG = "TR"  # Başlangıç dili
@@ -86,20 +432,12 @@ STRINGS = {
         # Menü / yeni özellik metinleri (TR)
         "menu_play":      "Oyuna Başla",
         "menu_campaign":  "Campaign",
-        "menu_maps":      "Haritalar",
         "menu_settings":  "Ayarlar",
         "menu_chars":     "Karakterler",
         "menu_quit":      "Çıkış",
         "menu_back":      "Geri",
         "main_menu":      "Ana Menü",
         "campaign_title": "Campaign Mode",
-        "map_title":      "Harita Seç",
-        "map_start":      "Başlat",
-        "map_difficulty": "Zorluk",
-        "map_rewards":    "Ödüller",
-        "map_unlock_default": "Açık",
-        "map_unlock_survive": "5 dakika hayatta kal",
-        "map_unlock_kills":   "500 kill yap",
         "campaign_level": "Level {n}",
         "target_wave":    "Target Wave {n}",
         "completed":      "TAMAMLANDI",
@@ -113,6 +451,15 @@ STRINGS = {
         "menu_fs_off":    "KAPALI",
         "boss_fight":     "BOSS SAVAŞI!",
         "gold":           "Altın",
+        # Görev sistemi
+        "quests_title":         "GÖREVLER",
+        "quest_kill":           "{n} düşman öldür",
+        "quest_survive":        "{n} dakika hayatta kal",
+        "quest_gold":           "{n} altın kazan",
+        "quest_reward":         "+{r} Altın",
+        "quest_done":           "TAMAMLANDI",
+        "quest_new":            "YENİ GÖREV!",
+        "quest_complete_notif": "Görev Tamamlandı! +{r} Altın",
         "locked":         "KİLİTLİ",
         "buy":            "Satın Al",
         "owned":          "SAHİP",
@@ -189,20 +536,12 @@ STRINGS = {
         # Menu / new features (EN)
         "menu_play":      "Play",
         "menu_campaign":  "Campaign",
-        "menu_maps":      "Maps",
         "menu_settings":  "Settings",
         "menu_chars":     "Characters",
         "menu_quit":      "Quit",
         "menu_back":      "Back",
         "main_menu":      "Main Menu",
         "campaign_title": "Campaign Mode",
-        "map_title":      "Select Map",
-        "map_start":      "Start",
-        "map_difficulty": "Difficulty",
-        "map_rewards":    "Rewards",
-        "map_unlock_default": "Unlocked",
-        "map_unlock_survive": "Survive 5 minutes",
-        "map_unlock_kills":   "Reach 500 kills",
         "campaign_level": "Level {n}",
         "target_wave":    "Target Wave {n}",
         "completed":      "COMPLETED",
@@ -216,6 +555,15 @@ STRINGS = {
         "menu_fs_off":    "OFF",
         "boss_fight":     "BOSS FIGHT!",
         "gold":           "Gold",
+        # Quest system
+        "quests_title":         "QUESTS",
+        "quest_kill":           "Kill {n} enemies",
+        "quest_survive":        "Survive {n} minutes",
+        "quest_gold":           "Earn {n} gold",
+        "quest_reward":         "+{r} Gold",
+        "quest_done":           "COMPLETED",
+        "quest_new":            "NEW QUEST!",
+        "quest_complete_notif": "Quest Done! +{r} Gold",
         "locked":         "LOCKED",
         "buy":            "Buy",
         "owned":          "OWNED",
@@ -1084,28 +1432,42 @@ def get_upgrade_def(ut):
 # Düşman tipleri
 # ---------------------------------------------------------------------------
 class EnemyType(Enum):
-    BASIC  = auto()
-    FAST   = auto()
-    TANK   = auto()
-    RANGED = auto()
+    BASIC           = auto()
+    FAST            = auto()
+    TANK            = auto()
+    RUNNER          = auto()
+    EXPLODER        = auto()
+    NECROMANCER     = auto()
+    SUMMONED_MINION = auto()
+    RANGED          = auto()
 
 ENEMY_DEFS = {
     EnemyType.BASIC:  dict(hp=40,  speed=1.2, damage=8,  xp=5,  radius=14, color=(200, 60, 60)),
     EnemyType.FAST:   dict(hp=20,  speed=2.4, damage=5,  xp=8,  radius=10, color=(255, 120, 40)),
-    EnemyType.TANK:   dict(hp=200, speed=0.7, damage=20, xp=20, radius=22, color=(120, 60, 200)),
-    EnemyType.RANGED: dict(hp=35,  speed=0.9, damage=10, xp=12, radius=13, color=(60, 200, 120)),
+    EnemyType.TANK:   dict(hp=160, speed=0.65, damage=8,  xp=28, radius=20, color=(70, 70, 75)),
+    EnemyType.RUNNER:   dict(hp=24,  speed=3.2,  damage=5,  xp=9,  radius=8,  color=(255, 60, 210)),
+    EnemyType.EXPLODER:        dict(hp=65,  speed=1.6,  damage=8,  xp=12, radius=12, color=(255, 90, 30)),
+    EnemyType.NECROMANCER:     dict(hp=80,  speed=0.9,  damage=6,  xp=18, radius=14, color=(80, 35, 110)),
+    EnemyType.SUMMONED_MINION: dict(hp=15,  speed=1.1,  damage=3,  xp=2,  radius=10, color=(185, 185, 190)),
+    EnemyType.RANGED:          dict(hp=35,  speed=0.9, damage=10, xp=12, radius=13, color=(60, 200, 120)),
 }
+
+def enemy_hp_multiplier(wave: int) -> float:
+    return 1.0 + max(0, wave) * 0.09
+
+def enemy_damage_multiplier(wave: int) -> float:
+    return 1.0 + max(0, wave) * 0.02
 
 class Enemy:
     def __init__(self, x, y, etype: EnemyType, wave: int):
         self.x, self.y = float(x), float(y)
         self.etype = etype
+        self.wave = wave
         d = ENEMY_DEFS[etype]
-        scale = 1 + wave * 0.08
-        self.max_hp = int(d['hp'] * scale)
+        self.max_hp = int(d['hp'] * enemy_hp_multiplier(wave))
         self.hp     = self.max_hp
         self.speed  = d['speed']
-        self.damage = int(d['damage'] * scale)
+        self.damage = int(d['damage'] * enemy_damage_multiplier(wave))
         self.xp     = d['xp']
         self.radius = d['radius']
         self.color  = d['color']
@@ -1124,6 +1486,12 @@ class Enemy:
         self.slow_factor = 1.0
         self.frozen_timer = 0
 
+        self.exploder_armed = False
+        self.exploder_fuse = 0
+
+        self.summon_cd = 6 * FPS
+        self.summoned_minions: List[Enemy] = []
+
     def apply_slow(self, duration: int, factor: float) -> None:
         self.slow_timer = max(self.slow_timer, duration)
         self.slow_factor = min(self.slow_factor, factor)
@@ -1132,6 +1500,8 @@ class Enemy:
         self.frozen_timer = max(self.frozen_timer, duration)
 
     def take_damage(self, amount):
+        if self.etype == EnemyType.EXPLODER and self.exploder_armed:
+            amount *= 0.5
         self.hp -= amount
         self.hit_flash = 8
         self.kbx += random.uniform(-2, 2)
@@ -1139,12 +1509,16 @@ class Enemy:
         if self.hp <= 0:
             self.alive = False
 
-    def update(self, player, projectiles_out):
+    def update(self, player, projectiles_out, summoned_out=None):
         # Knockback sönümleme
-        self.x += self.kbx
-        self.y += self.kby
-        self.kbx *= 0.8
-        self.kby *= 0.8
+        if not self.exploder_armed:
+            self.x += self.kbx
+            self.y += self.kby
+            self.kbx *= 0.8
+            self.kby *= 0.8
+        else:
+            self.kbx = 0.0
+            self.kby = 0.0
 
         if self.frozen_timer > 0:
             self.frozen_timer -= 1
@@ -1158,6 +1532,20 @@ class Enemy:
         dx = player.x - self.x
         dy = player.y - self.y
         d = math.hypot(dx, dy)
+
+        if self.etype == EnemyType.EXPLODER:
+            if self.exploder_armed:
+                effective_speed = 0.0
+                self.exploder_fuse -= 1
+                if self.exploder_fuse <= 0:
+                    if d <= 90 + player.radius:
+                        player.take_damage(20)
+                    self.alive = False
+            elif d <= 80:
+                self.exploder_armed = True
+                self.exploder_fuse = FPS
+                effective_speed = 0.0
+
         if d > 0 and effective_speed > 0:
             self.x += (dx / d) * effective_speed
             self.y += (dy / d) * effective_speed
@@ -1168,6 +1556,20 @@ class Enemy:
 
         if self.hit_flash > 0:
             self.hit_flash -= 1
+
+        if self.etype == EnemyType.NECROMANCER and summoned_out is not None:
+            self.summon_cd -= 1
+            self.summoned_minions = [m for m in self.summoned_minions if m.alive]
+            if self.summon_cd <= 0:
+                self.summon_cd = 6 * FPS
+                if len(self.summoned_minions) < 4:
+                    ang = random.uniform(0, math.tau)
+                    spawn_dist = self.radius + 18
+                    mx = clamp(self.x + math.cos(ang) * spawn_dist, 0, WORLD_W)
+                    my = clamp(self.y + math.sin(ang) * spawn_dist, 0, WORLD_H)
+                    minion = Enemy(mx, my, EnemyType.SUMMONED_MINION, self.wave)
+                    self.summoned_minions.append(minion)
+                    summoned_out.append(minion)
 
         # Ranged saldırı
         if self.etype == EnemyType.RANGED:
@@ -1190,6 +1592,8 @@ class Enemy:
 
         if self.hit_flash > 0:
             color = C_WHITE
+        elif self.etype == EnemyType.EXPLODER and self.exploder_armed and (self.exploder_fuse // 8) % 2 == 0:
+            color = C_RED
         elif self.frozen_timer > 0:
             color = C_ICE
         elif self.slow_timer > 0:
@@ -1199,6 +1603,8 @@ class Enemy:
         pygame.draw.circle(surf, color, (sx, sy), r)
         if self.frozen_timer > 0:
             pygame.draw.circle(surf, (200, 240, 255), (sx, sy), r + 2, 2)
+        if self.etype == EnemyType.EXPLODER and self.exploder_armed:
+            pygame.draw.circle(surf, C_RED, (sx, sy), 90, 1)
         # Tank için dışında halka
         if self.etype == EnemyType.TANK:
             pygame.draw.circle(surf, C_WHITE, (sx, sy), r + 3, 2)
@@ -1461,13 +1867,16 @@ class UpgradeScreen:
 # Spawn yöneticisi
 # ---------------------------------------------------------------------------
 class SpawnManager:
-    def __init__(self, map_def=None):
+    def __init__(self):
         self.timer = 0
         self.wave = 0
         self.wave_timer = 0
         self.base_rate = 120  # frame/spawn
         self.horde_cd = 0
-        self.map_def = map_def or MAP_DEFS[0]
+        self.elite_timer = 0
+        self.runner_timer = 0
+        self.exploder_timer = 0
+        self.necromancer_timer = 0
 
     def update(self, player, enemies, tick):
         self.timer += 1
@@ -1477,19 +1886,58 @@ class SpawnManager:
         wave = tick // (30 * FPS)
         self.wave = wave
 
-        rate = max(20, int((self.base_rate - wave * 5) * self.map_def.get("spawn_rate_mult", 1.0)))
+        rate = max(20, self.base_rate - wave * 5)
 
         if self.timer >= rate:
             self.timer = 0
             self._spawn(player, enemies, wave)
 
+        if wave >= 5:
+            self.elite_timer += 1
+            elite_rate = max(360, int(720 - wave * 20))
+            if self.elite_timer >= elite_rate:
+                self.elite_timer = 0
+                if random.random() < 0.55:
+                    self._spawn(player, enemies, wave, EnemyType.TANK)
+        else:
+            self.elite_timer = 0
+
+        if wave >= 4:
+            self.runner_timer += 1
+            runner_rate = max(300, int(600 - wave * 15))
+            if self.runner_timer >= runner_rate:
+                self.runner_timer = 0
+                if random.random() < 0.45:
+                    self._spawn(player, enemies, wave, EnemyType.RUNNER)
+        else:
+            self.runner_timer = 0
+
+        if wave >= 5:
+            self.exploder_timer += 1
+            exploder_rate = max(420, int(840 - wave * 20))
+            if self.exploder_timer >= exploder_rate:
+                self.exploder_timer = 0
+                if random.random() < 0.40:
+                    self._spawn(player, enemies, wave, EnemyType.EXPLODER)
+        else:
+            self.exploder_timer = 0
+
+        if wave >= 6:
+            self.necromancer_timer += 1
+            necromancer_rate = max(540, int(1080 - wave * 20))
+            if self.necromancer_timer >= necromancer_rate:
+                self.necromancer_timer = 0
+                if random.random() < 0.35:
+                    self._spawn(player, enemies, wave, EnemyType.NECROMANCER)
+        else:
+            self.necromancer_timer = 0
+
         # Her 60 saniyede bir horde
         if tick > 0 and tick % (60 * FPS) == 0:
-            horde_count = int((20 + wave * 5) * self.map_def.get("horde_mult", 1.0))
-            for _ in range(horde_count):
+            for _ in range(20 + wave * 5):
                 self._spawn(player, enemies, wave)
 
-    def _spawn(self, player, enemies, wave):
+    def _spawn(self, player, enemies, wave, forced_type=None):
         # Ekranın dışında spawn et
         margin = 200
         side = random.randint(0, 3)
@@ -1509,16 +1957,17 @@ class SpawnManager:
         x = clamp(x, 0, WORLD_W)
         y = clamp(y, 0, WORLD_H)
 
-        # Tipe göre olasılık
-        r = random.random()
-        if wave < 2 or r < 0.50:
-            etype = EnemyType.BASIC
-        elif r < 0.70:
-            etype = EnemyType.FAST
-        elif r < 0.85:
-            etype = EnemyType.RANGED
+        if forced_type is not None:
+            etype = forced_type
         else:
-            etype = EnemyType.TANK
+            # Tipe göre olasılık
+            r = random.random()
+            if wave < 2 or r < 0.50:
+                etype = EnemyType.BASIC
+            elif r < 0.70:
+                etype = EnemyType.FAST
+            else:
+                etype = EnemyType.RANGED
 
         enemies.append(Enemy(x, y, etype, wave))
 
@@ -1625,12 +2074,12 @@ class Boss:
         self.y = clamp(self.y, 0, WORLD_H)
         if self.hit_flash > 0:
             self.hit_flash -= 1
-        # Spiral ateş: 4 yönde mermi
+        # Playerin mevcut konumuna tek seferlik nisan alarak ates et.
         self.shoot_cd -= 1
         if self.shoot_cd <= 0:
             self.shoot_cd = 55
+            a = angle_to((self.x, self.y), (player.x, player.y))
             for i in range(4):
-                a = self.angle + (math.tau / 4) * i
                 proj = Projectile(self.x, self.y, a, speed=3.8,
                                   damage=self.damage, lifetime=100,
                                   color=(255, 60, 220), size=9)
@@ -1933,64 +2382,6 @@ CHARACTER_DEFS = [
 
 
 # ---------------------------------------------------------------------------
-# Haritalar: menü, önizleme, kilit durumu ve oynanış modifierleri
-# ---------------------------------------------------------------------------
-MAP_DEFS = [
-    {
-        "id": "meadow",
-        "name": "Meadow",
-        "desc": "Balanced open field.",
-        "difficulty": "Normal",
-        "unlock_key": "map_unlock_default",
-        "bg": C_BG,
-        "grid": C_GRID,
-        "preview": (28, 24, 42),
-        "spawn_rate_mult": 1.0,
-        "horde_mult": 1.0,
-        "boss_interval_mult": 1.0,
-        "xp_mult": 1.0,
-        "gold_mult": 1.0,
-    },
-    {
-        "id": "library",
-        "name": "Library",
-        "desc": "Dense corridors with faster pressure and better XP.",
-        "difficulty": "Hard",
-        "unlock_key": "map_unlock_survive",
-        "bg": (10, 12, 22),
-        "grid": (42, 36, 62),
-        "preview": (36, 28, 58),
-        "spawn_rate_mult": 0.88,
-        "horde_mult": 1.25,
-        "boss_interval_mult": 1.0,
-        "xp_mult": 1.15,
-        "gold_mult": 1.05,
-    },
-    {
-        "id": "crypt",
-        "name": "Crypt",
-        "desc": "Riskier elites and stronger gold rewards.",
-        "difficulty": "Expert",
-        "unlock_key": "map_unlock_kills",
-        "bg": (8, 14, 13),
-        "grid": (26, 48, 42),
-        "preview": (24, 54, 44),
-        "spawn_rate_mult": 1.08,
-        "horde_mult": 0.9,
-        "boss_interval_mult": 1.2,
-        "xp_mult": 0.95,
-        "gold_mult": 1.35,
-    },
-]
-
-
-def get_map_def(map_id):
-    for mdef in MAP_DEFS:
-        if mdef["id"] == map_id:
-            return mdef
-    return MAP_DEFS[0]
-
-# ---------------------------------------------------------------------------
 # Kalıcı veri (altın + açık karakterler — oyun oturumu boyunca saklanır)
 # ---------------------------------------------------------------------------
 class SaveData:
@@ -2002,11 +2393,10 @@ class SaveData:
         self.total_gold    = 0
         self.unlocked_ids  = {"warrior"}   # Başlangıç karakteri açık
         self.selected_id   = "warrior"
-        self.unlocked_map_ids = {"meadow"}
-        self.selected_map_id = "meadow"
-        self.best_survival_seconds = 0
-        self.best_kills = 0
         self.campaign_unlocked_level = 1
+        self.lifetime_gold = 0
+        self.unlocked_achievements = set()
+        self.chest_opens = 0
 
     def unlock(self, char_id, cost):
         if self.total_gold >= cost:
@@ -2021,14 +2411,6 @@ class SaveData:
                 self.campaign_unlocked_level,
                 min(30, level + 1)
             )
-
-    def record_run(self, elapsed_seconds, kills):
-        self.best_survival_seconds = max(self.best_survival_seconds, elapsed_seconds)
-        self.best_kills = max(self.best_kills, kills)
-        if self.best_survival_seconds >= 300:
-            self.unlocked_map_ids.add("library")
-        if self.best_kills >= 500:
-            self.unlocked_map_ids.add("crypt")
 
 
 def campaign_target_wave(level):
@@ -2085,7 +2467,6 @@ class Button:
 # ---------------------------------------------------------------------------
 class GameState(Enum):
     MENU       = auto()
-    MAP_SELECT = auto()
     CAMPAIGN   = auto()
     SETTINGS   = auto()
     CHARACTERS = auto()
@@ -2175,9 +2556,6 @@ class MainMenu:
         pygame.draw.line(surf, (80,60,140), (SCREEN_W//2-160, line_y), (SCREEN_W//2+160, line_y), 1)
         for btn in self.buttons.values():
             btn.draw(surf)
-        ver = self.font_ver.render("v2.0 - Boss Altın Karakter Sandık Drone Taret",
-                                   True, (60,55,90))
-        surf.blit(ver, (12, SCREEN_H - 20))
         pygame.display.flip()
 
     def refresh_labels(self):
@@ -2512,6 +2890,9 @@ class Game:
         # Kalıcı veriler (menüler arası korunur)
         self.save          = SaveData()
 
+        # Başarım sistemi
+        self.ach_mgr       = AchievementManager(self.save)
+
         # State machine
         self.state         = GameState.MENU
         self.main_menu     = MainMenu(self.sfx)
@@ -2579,6 +2960,11 @@ class Game:
         # Boss bildirim
         self.boss_alert_timer = 0     # ekranda "BOSS FIGHT!" yazısı kalma süresi
 
+        # Görev sistemi her yeni oyunda sıfırdan başlar
+        self.quest_mgr   = QuestManager()
+        self._prev_kills = 0
+        self._prev_gold  = 0
+
         self.cam_x = self.player.x - SCREEN_W // 2
         self.cam_y = self.player.y - SCREEN_H // 2
 
@@ -2588,6 +2974,7 @@ class Game:
     def _go_menu(self):
         # Oyun bittiyse kazanılan altını kaydet
         self.save.total_gold += self.session_gold
+        self.save.lifetime_gold += self.session_gold
         self.session_gold     = 0
         self.campaign_mode = False
         self.state = GameState.MENU
@@ -2619,6 +3006,7 @@ class Game:
         self.paused = True
         self.upgrade_screen = None
         self.save.total_gold += self.session_gold
+        self.save.lifetime_gold += self.session_gold
         self.session_gold = 0
         self.save.complete_campaign_level(self.campaign_level)
         self.campaign_scr = CampaignScreen(self.save)
@@ -2809,9 +3197,11 @@ class Game:
 
         # Normal düşman güncellemeleri
         new_ep = []
+        summoned_enemies = []
         for e in self.enemies:
-            e.update(p, new_ep)
+            e.update(p, new_ep, summoned_enemies)
         self.enemy_projs.extend(new_ep)
+        self.enemies.extend(summoned_enemies)
 
         # Boss güncellemeleri
         boss_ep = []
@@ -2861,14 +3251,17 @@ class Game:
                 self.session_gold += amt
                 self.damage_numbers.append(
                     DamageNumber(p.x, p.y - 30, f"+{amt}G", C_YELLOW))
+                self.ach_mgr.notify_chest_open()
             elif drop == ChestDrop.DRONE:
                 self.drones.append(Drone(index=len(self.drones)))
                 self.damage_numbers.append(
                     DamageNumber(p.x, p.y - 30, "+Drone", C_CYAN))
+                self.ach_mgr.notify_chest_open()
             elif drop == ChestDrop.TURRET:
                 self.turrets.append(Turret(p.x, p.y))
                 self.damage_numbers.append(
                     DamageNumber(p.x, p.y - 30, "+Taret", (255,180,40)))
+                self.ach_mgr.notify_chest_open()
 
         # Ölen normal düşmanlar
         dead = [e for e in self.enemies if not e.alive]
@@ -2888,6 +3281,7 @@ class Game:
         for b in dead_bosses:
             self.kills += 1
             self.sfx.play_death()
+            self.ach_mgr.notify_boss_kill()
             # Yüksek XP
             self.xp_gems.append(XPGem(b.x, b.y, b.XP_REWARD))
             # Yüksek altın
@@ -2911,12 +3305,35 @@ class Game:
         self.xp_gems        = [g  for g  in self.xp_gems        if g.alive]
         self.gold_coins     = [c  for c  in self.gold_coins     if c.alive]
 
+        # Başarım bildirimleri
+        elapsed_secs = self.tick // FPS
+        self.ach_mgr.notify_kill(self.kills)
+        self.ach_mgr.notify_time(elapsed_secs)
+        self.ach_mgr.notify_gold(self.session_gold)
+
+        # Görev sistemi güncelle
+        if not self.game_over:
+            kills_delta      = self.kills - self._prev_kills
+            gold_delta       = self.session_gold - self._prev_gold
+            self._prev_kills = self.kills
+            self._prev_gold  = self.session_gold
+
+            self.quest_mgr.update(self.tick, kills_delta, gold_delta, elapsed_secs)
+
+            reward = self.quest_mgr.collect_rewards()
+            if reward > 0:
+                self.session_gold += reward
+                self._prev_gold   += reward
+                self.damage_numbers.append(
+                    DamageNumber(p.x, p.y - 50, f"+{reward}G", C_YELLOW))
+
         # Game over
         if p.hp <= 0:
             p.hp = 0
             self.game_over = True
             # Altını kaydet (game over ekranında göstermek için)
             self.save.total_gold += self.session_gold
+            self.save.lifetime_gold += self.session_gold
             self.session_gold     = 0
 
     def _trigger_levelup(self):
@@ -3067,6 +3484,13 @@ class Game:
         # Kontrol ipuçları (alt orta)
         hint = self.font_sm.render(T("controls"), True, (100,100,140))
         surf.blit(hint, (SCREEN_W//2 - hint.get_width()//2, SCREEN_H - 24))
+
+        # Başarım toast bildirimi
+        self.ach_mgr.draw(surf, SCREEN_W, SCREEN_H)
+
+        # Görev paneli ve bildirimleri
+        self.quest_mgr.draw_panel(surf, SCREEN_H)
+        self.quest_mgr.draw_notifications(surf, SCREEN_W, 80)
 
     # -----------------------------------------------------------------------
     def _draw_weapons_panel(self, surf):
