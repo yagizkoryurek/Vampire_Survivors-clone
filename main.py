@@ -207,6 +207,17 @@ class Quest:
         return f"{min(self.progress, self.target)}/{self.target}"
 
 
+def draw_collapse_arrow(surf, rect, collapsed, hovered=False):
+    """Panel başlığındaki aç/kapa oku: kapalıyken sağa, açıkken aşağı bakar."""
+    cx, cy = rect.center
+    color  = (230, 220, 255) if hovered else (180, 160, 255)
+    if collapsed:
+        pts = [(cx - 3, cy - 5), (cx - 3, cy + 5), (cx + 4, cy)]
+    else:
+        pts = [(cx - 5, cy - 3), (cx + 5, cy - 3), (cx, cy + 4)]
+    pygame.draw.polygon(surf, color, pts)
+
+
 class QuestManager:
     MAX_ACTIVE      = 4
     UNLOCK_INTERVAL = 120
@@ -224,6 +235,8 @@ class QuestManager:
         self._font_title = None
         self._font_item  = None
         self._font_prog  = None
+        self.collapsed   = False                 # panel içeriği gizli mi
+        self.toggle_rect: Optional[pygame.Rect] = None
         self._build_initial()
 
     def _make_quest(self, qtype: QuestType, tier: int) -> Quest:
@@ -302,13 +315,15 @@ class QuestManager:
 
         active = [q for q in self.quests if not q.done][:self.MAX_ACTIVE]
         if not active:
+            self.toggle_rect = None
             return
 
         ROW_H   = 44
         PAD     = 6
-        panel_h = 22 + len(active) * ROW_H + PAD
+        panel_h = 26 if self.collapsed else 22 + len(active) * ROW_H + PAD
         px      = self.PANEL_X
         py      = 65
+        self.toggle_rect = pygame.Rect(px + self.PANEL_W - 26, py + 1, 24, 20)
 
         panel_s = pygame.Surface((self.PANEL_W, panel_h), pygame.SRCALPHA)
         panel_s.fill((12, 10, 22, 180))
@@ -317,6 +332,10 @@ class QuestManager:
 
         title_s = self._font_title.render(T("quests_title"), True, (180, 160, 255))
         surf.blit(title_s, (px + PAD, py + 4))
+        draw_collapse_arrow(surf, self.toggle_rect, self.collapsed,
+                            self.toggle_rect.collidepoint(pygame.mouse.get_pos()))
+        if self.collapsed:
+            return
 
         for i, q in enumerate(active):
             ry = py + 22 + i * ROW_H
@@ -386,6 +405,16 @@ STRINGS = {
         "wave":          "Dalga",
         "restart":       "[R] Yeniden Başla   [ESC] Çıkış",
         "controls":      "WASD: Hareket  P: Duraklat  L: Dil  M: Ses  ESC: Çıkış",
+        "controls_btn":  "Kontroller",
+        "controls_title": "KONTROLLER",
+        "close":         "Kapat",
+        "ctl_move":      ("WASD / Yön tuşları", "Hareket"),
+        "ctl_pause":     ("P", "Duraklat / Devam"),
+        "ctl_lang":      ("L", "Dil değiştir"),
+        "ctl_sound":     ("M", "Sesi aç / kapat"),
+        "ctl_upgrade":   ("1 / 2 / 3 veya tık", "Yükseltme seç"),
+        "ctl_restart":   ("R", "Yeniden başla (oyun bitince)"),
+        "ctl_menu":      ("ESC", "Ana menü (Kontroller açıkken: kapat)"),
         "weapons":       "Kırbaç Lv{w}  Orb Lv{o}  Aura Lv{a}  Boomerang Lv{b}  Zırh {ar}  Regen {r}",
         "weapons_title": "Silahlar",
         "wpn_whip":      "Kırbaç",
@@ -490,6 +519,16 @@ STRINGS = {
         "wave":          "Wave",
         "restart":       "[R] Restart   [ESC] Quit",
         "controls":      "WASD: Move  P: Pause  L: Language  M: Sound  ESC: Quit",
+        "controls_btn":  "Controls",
+        "controls_title": "CONTROLS",
+        "close":         "Close",
+        "ctl_move":      ("WASD / Arrow keys", "Move"),
+        "ctl_pause":     ("P", "Pause / Resume"),
+        "ctl_lang":      ("L", "Switch language"),
+        "ctl_sound":     ("M", "Sound on / off"),
+        "ctl_upgrade":   ("1 / 2 / 3 or click", "Pick an upgrade"),
+        "ctl_restart":   ("R", "Restart (after game over)"),
+        "ctl_menu":      ("ESC", "Main menu (closes this panel when open)"),
         "weapons":       "Whip Lv{w}  Orb Lv{o}  Aura Lv{a}  Boomerang Lv{b}  Armor {ar}  Regen {r}",
         "weapons_title": "Weapons",
         "wpn_whip":      "Whip",
@@ -2886,6 +2925,7 @@ class Game:
         self.font_med  = pygame.font.SysFont("segoeui", 22, bold=True)
         self.font_big  = pygame.font.SysFont("segoeui", 36, bold=True)
         self.font_dmg  = pygame.font.SysFont("segoeui", 15, bold=True)
+        self.font_bar  = pygame.font.SysFont("segoeui", 12, bold=True)
 
         # Kalıcı veriler (menüler arası korunur)
         self.save          = SaveData()
@@ -2907,6 +2947,15 @@ class Game:
                                      T("next_level"), self.font_med)
         self.btn_completed_menu = Button(SCREEN_W // 2 + 20, btn_y, 220, 52,
                                          T("main_menu"), self.font_med)
+
+        # Kontroller butonu (alt orta) ve paneli
+        self.btn_controls = Button(SCREEN_W // 2 - 65, SCREEN_H - 38, 130, 28,
+                                   T("controls_btn"), self.font_sm)
+        self.controls_panel = pygame.Rect(0, 0, 580, 400)
+        self.controls_panel.center = (SCREEN_W // 2, SCREEN_H // 2)
+        self.btn_controls_close = Button(self.controls_panel.centerx - 80,
+                                         self.controls_panel.bottom - 64, 160, 44,
+                                         T("close"), self.font_med)
 
         self.reset()
 
@@ -2951,6 +3000,9 @@ class Game:
         self.spawn_mgr   = SpawnManager()
         self.tick        = 0
         self.paused      = False
+        self.controls_open     = False   # Kontroller paneli (oyunu durdurur)
+        self.weapons_collapsed = False
+        self._weapons_toggle_rect: Optional[pygame.Rect] = None
         self.game_over   = False
         self.level_completed = False
         self.upgrade_screen: Optional[UpgradeScreen] = None
@@ -3083,6 +3135,30 @@ class Game:
                         if self.btn_completed_menu.is_clicked(ev):
                             self._go_menu(); break
                         continue
+                    # Kontroller paneli açıkken: ESC yalnızca paneli kapatır
+                    if self.controls_open:
+                        if ((ev.type == pygame.KEYDOWN and ev.key == pygame.K_ESCAPE)
+                                or self.btn_controls_close.is_clicked(ev)):
+                            self.controls_open = False
+                        elif ev.type == pygame.KEYDOWN and ev.key == pygame.K_l:
+                            toggle_lang()
+                        elif ev.type == pygame.KEYDOWN and ev.key == pygame.K_m:
+                            self.sfx.toggle_mute()
+                        continue
+                    # HUD tıklamaları (yükseltme ekranı / game over açıkken kapalı)
+                    if (ev.type == pygame.MOUSEBUTTONDOWN and ev.button == 1
+                            and not self.upgrade_screen and not self.game_over):
+                        if self.btn_controls.is_clicked(ev):
+                            self.controls_open = True
+                            continue
+                        wr = self._weapons_toggle_rect
+                        if wr and wr.collidepoint(ev.pos):
+                            self.weapons_collapsed = not self.weapons_collapsed
+                            continue
+                        qr = self.quest_mgr.toggle_rect
+                        if qr and qr.collidepoint(ev.pos):
+                            self.quest_mgr.collapsed = not self.quest_mgr.collapsed
+                            continue
                     if ev.type == pygame.KEYDOWN:
                         if ev.key == pygame.K_ESCAPE:
                             self._go_menu(); break
@@ -3102,7 +3178,8 @@ class Game:
                             self.paused = False
 
                 if self.state == GameState.PLAYING:
-                    if not self.paused and not self.game_over and not self.upgrade_screen and not self.level_completed:
+                    if (not self.paused and not self.game_over and not self.upgrade_screen
+                            and not self.level_completed and not self.controls_open):
                         self._update()
                     self._draw()
 
@@ -3418,6 +3495,8 @@ class Game:
             self._draw_pause(surf)
         if self.game_over:
             self._draw_game_over(surf)
+        if self.controls_open:
+            self._draw_controls(surf)
 
         pygame.display.flip()
 
@@ -3427,23 +3506,25 @@ class Game:
 
         # HP çubuğu
         bar_w = 220
+        bar_h = 18
         bx, by = 16, 16
-        pygame.draw.rect(surf, C_HP_BG, (bx, by, bar_w, 18), border_radius=4)
+        pygame.draw.rect(surf, C_HP_BG, (bx, by, bar_w, bar_h), border_radius=4)
         fill = int(bar_w * p.hp / p.max_hp)
-        pygame.draw.rect(surf, C_HP, (bx, by, fill, 18), border_radius=4)
-        pygame.draw.rect(surf, (200,200,200), (bx, by, bar_w, 18), 1, border_radius=4)
-        surf.blit(self.font_sm.render(f"{T('hp')}  {p.hp}/{p.max_hp}", True, C_WHITE),
-                  (bx + 4, by + 2))
+        pygame.draw.rect(surf, C_HP, (bx, by, fill, bar_h), border_radius=4)
+        pygame.draw.rect(surf, (200,200,200), (bx, by, bar_w, bar_h), 1, border_radius=4)
+        hp_s = self.font_bar.render(f"{T('hp')}  {p.hp}/{p.max_hp}", True, C_WHITE)
+        surf.blit(hp_s, hp_s.get_rect(midleft=(bx + 6, by + bar_h // 2)))
 
         # XP çubuğu
+        bar_h2 = 16
         bx2, by2 = 16, 42
-        pygame.draw.rect(surf, C_XP_BG, (bx2, by2, bar_w, 12), border_radius=4)
+        pygame.draw.rect(surf, C_XP_BG, (bx2, by2, bar_w, bar_h2), border_radius=4)
         fill2 = int(bar_w * p.xp / p.xp_needed)
-        pygame.draw.rect(surf, C_XP, (bx2, by2, fill2, 12), border_radius=4)
-        pygame.draw.rect(surf, (200,200,200), (bx2, by2, bar_w, 12), 1, border_radius=4)
-        surf.blit(self.font_sm.render(
-            f"{T('lv')} {p.level}  {T('xp')} {p.xp}/{p.xp_needed}", True, C_WHITE),
-            (bx2 + 4, by2 - 1))
+        pygame.draw.rect(surf, C_XP, (bx2, by2, fill2, bar_h2), border_radius=4)
+        pygame.draw.rect(surf, (200,200,200), (bx2, by2, bar_w, bar_h2), 1, border_radius=4)
+        xp_s = self.font_bar.render(
+            f"{T('lv')} {p.level}  {T('xp')} {p.xp}/{p.xp_needed}", True, C_WHITE)
+        surf.blit(xp_s, xp_s.get_rect(midleft=(bx2 + 6, by2 + bar_h2 // 2)))
 
         # Süre, dalga, kill (üst orta)
         elapsed = self.tick // FPS
@@ -3462,17 +3543,23 @@ class Game:
         ml = self.font_sm.render(f"{mute_label}  |  {T('lang_label')}", True, mute_col)
         surf.blit(ml, (SCREEN_W - ml.get_width() - 12, 16))
 
-        # Altın (sağ üst, ikinci satır)
+        # Altın (sağ üst, ikinci satır) — çerçeveli kompakt panel
         gold_s = self.font_sm.render(
             f"{T('gold')}: {self.save.total_gold + self.session_gold}", True, C_YELLOW)
-        surf.blit(gold_s, (SCREEN_W - gold_s.get_width() - 12, 36))
+        gold_r = pygame.Rect(0, 0, gold_s.get_width() + 20, 26)
+        gold_r.topright = (SCREEN_W - 12, 42)
+        gold_bg = pygame.Surface(gold_r.size, pygame.SRCALPHA)
+        gold_bg.fill((12, 10, 22, 180))
+        surf.blit(gold_bg, gold_r.topleft)
+        pygame.draw.rect(surf, (120, 100, 220), gold_r, 1, border_radius=4)
+        surf.blit(gold_s, gold_s.get_rect(center=gold_r.center))
 
         if self.campaign_mode:
             c_s = self.font_sm.render(
                 f"{T('campaign_level', n=self.campaign_level)}  |  "
                 f"{T('target_wave', n=campaign_target_wave(self.campaign_level))}",
                 True, (180, 175, 230))
-            surf.blit(c_s, (SCREEN_W - c_s.get_width() - 12, 56))
+            surf.blit(c_s, (SCREEN_W - c_s.get_width() - 12, 74))
 
         # Drone / Taret sayısı
         if self.drones or self.turrets:
@@ -3481,9 +3568,11 @@ class Game:
                 True, (180,220,255))
             surf.blit(dt_s, (16, SCREEN_H - 44))
 
-        # Kontrol ipuçları (alt orta)
-        hint = self.font_sm.render(T("controls"), True, (100,100,140))
-        surf.blit(hint, (SCREEN_W//2 - hint.get_width()//2, SCREEN_H - 24))
+        # Kontroller butonu (alt orta)
+        mx, my = pygame.mouse.get_pos()
+        self.btn_controls.label = T("controls_btn")
+        self.btn_controls.update(mx, my)
+        self.btn_controls.draw(surf)
 
         # Başarım toast bildirimi
         self.ach_mgr.draw(surf, SCREEN_W, SCREEN_H)
@@ -3514,10 +3603,11 @@ class Game:
         PANEL_W  = 172
         ROW_H    = 19
         PAD      = 6
-        panel_h  = 22 + len(rows) * ROW_H + PAD
+        panel_h  = 26 if self.weapons_collapsed else 22 + len(rows) * ROW_H + PAD
 
         px = SCREEN_W - PANEL_W - 16
-        py = 100 if self.campaign_mode else 80
+        py = 104 if self.campaign_mode else 80
+        self._weapons_toggle_rect = pygame.Rect(px + PANEL_W - 26, py + 1, 24, 20)
 
         panel_s = pygame.Surface((PANEL_W, panel_h), pygame.SRCALPHA)
         panel_s.fill((12, 10, 22, 180))
@@ -3526,6 +3616,10 @@ class Game:
 
         title_s = self._wpn_font_title.render(T("weapons_title"), True, (180, 160, 255))
         surf.blit(title_s, (px + PAD, py + 4))
+        draw_collapse_arrow(surf, self._weapons_toggle_rect, self.weapons_collapsed,
+                            self._weapons_toggle_rect.collidepoint(pygame.mouse.get_pos()))
+        if self.weapons_collapsed:
+            return
 
         for i, (label, value_str) in enumerate(rows):
             ry = py + 22 + i * ROW_H
@@ -3557,6 +3651,37 @@ class Game:
         surf.blit(overlay, (0, 0))
         t = self.font_big.render(T("paused"), True, C_YELLOW)
         surf.blit(t, (SCREEN_W//2 - t.get_width()//2, SCREEN_H//2 - 30))
+
+    # -----------------------------------------------------------------------
+    def _draw_controls(self, surf):
+        overlay = pygame.Surface((SCREEN_W, SCREEN_H), pygame.SRCALPHA)
+        overlay.fill((0, 0, 0, 175))
+        surf.blit(overlay, (0, 0))
+
+        panel = self.controls_panel
+        panel_s = pygame.Surface((panel.w, panel.h), pygame.SRCALPHA)
+        panel_s.fill((*C_UI_BG[:3], 235))
+        surf.blit(panel_s, panel.topleft)
+        pygame.draw.rect(surf, (120, 100, 220), panel, 2, border_radius=8)
+
+        title = self.font_big.render(T("controls_title"), True, C_YELLOW)
+        surf.blit(title, title.get_rect(centerx=panel.centerx, y=panel.y + 20))
+
+        rows = ["ctl_move", "ctl_pause", "ctl_lang", "ctl_sound",
+                "ctl_upgrade", "ctl_restart", "ctl_menu"]
+        ry = panel.y + 80
+        for key in rows:
+            keys_txt, desc = T(key)
+            k_s = self.font_sm.render(keys_txt, True, (180, 160, 255))
+            d_s = self.font_sm.render(desc, True, (200, 195, 240))
+            surf.blit(k_s, (panel.x + 32, ry))
+            surf.blit(d_s, (panel.x + 230, ry))
+            ry += 30
+
+        mx, my = pygame.mouse.get_pos()
+        self.btn_controls_close.label = T("close")
+        self.btn_controls_close.update(mx, my)
+        self.btn_controls_close.draw(surf)
 
     # -----------------------------------------------------------------------
     def _draw_level_completed(self, surf):
