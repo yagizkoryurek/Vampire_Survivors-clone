@@ -87,8 +87,9 @@ class _Toast:
 
 
 class AchievementManager:
-    def __init__(self, save) -> None:
+    def __init__(self, save, sfx=None) -> None:
         self._save   = save
+        self._sfx    = sfx
         self._queue: List[_Toast]      = []
         self._active: Optional[_Toast] = None
         self._f_label = None
@@ -122,6 +123,8 @@ class AchievementManager:
             return
         self._save.unlocked_achievements.add(aid)
         self._queue.append(_Toast(ach_id=aid))
+        if self._sfx is not None:
+            self._sfx.play_achievement()
 
     def _tick_queue(self) -> None:
         if self._active is not None:
@@ -647,6 +650,7 @@ class SoundEngine:
         pygame.mixer.init()
         self.muted   = False
         self._cache: dict = {}
+        self._last_play: dict = {}
         self._bg_channel: Optional[pygame.mixer.Channel] = None
         self._start_bg()
 
@@ -674,6 +678,22 @@ class SoundEngine:
             buf.append(s)
         return bytes(buf)
 
+    def _tone_seq_buf(self, notes, vol=0.3, shimmer=0.0):
+        """notes: [(freq, dur)] sırayla çalınır; her nota kendi içinde söner.
+        shimmer: son notanın bir oktav üstüne eklenen hafif katman (0 = yok)."""
+        buf = array.array('h')
+        last = len(notes) - 1
+        for k, (freq, dur) in enumerate(notes):
+            n = int(self.SR * dur)
+            for i in range(n):
+                t   = i / self.SR
+                env = min(t / 0.004, 1.0) * math.exp(-4.0 * t / dur)
+                w   = math.sin(2 * math.pi * freq * t) + 0.25 * math.sin(4 * math.pi * freq * t)
+                if shimmer and k == last:
+                    w += shimmer * math.sin(4 * math.pi * freq * t)
+                buf.append(int(max(-1.0, min(1.0, vol * env * w)) * 32767))
+        return bytes(buf)
+
     def _noise_buf(self, dur, vol=0.35):
         n   = int(self.SR * dur)
         buf = array.array('h')
@@ -695,7 +715,31 @@ class SoundEngine:
         if not self.muted:
             snd.play()
 
+    def _throttled(self, key, min_ms):
+        """Ses azaltma: yalnızca sesi sınırlar, oyun mantığını etkilemez.
+        Sessizdeyken zaman damgasını tüketmez; aynı key min_ms içinde
+        tekrar çalınmaz (üst üste binmeyi önler)."""
+        if self.muted:
+            return False
+        now = pygame.time.get_ticks()
+        if now - self._last_play.get(key, -min_ms) < min_ms:
+            return False
+        self._last_play[key] = now
+        return True
+
     # --- Oyun sesleri ---
+    def play_coin(self):
+        if self._throttled('coin', 70):
+            self._play(self._make('coin',
+                lambda: self._tone_seq_buf([(988, 0.05), (1319, 0.11)], 0.3)))
+
+    def play_achievement(self):
+        if self._throttled('ach', 400):
+            self._play(self._make('ach',
+                lambda: self._tone_seq_buf(
+                    [(523, 0.09), (659, 0.09), (784, 0.09), (1047, 0.28)],
+                    0.35, shimmer=0.3)))
+
     def play_hit(self):
         self._play(self._make('hit',
             lambda: self._noise_buf(0.08, 0.3)))
@@ -2931,7 +2975,7 @@ class Game:
         self.save          = SaveData()
 
         # Başarım sistemi
-        self.ach_mgr       = AchievementManager(self.save)
+        self.ach_mgr       = AchievementManager(self.save, self.sfx)
 
         # State machine
         self.state         = GameState.MENU
@@ -3315,10 +3359,14 @@ class Game:
                 self.sfx.play_levelup(); self._trigger_levelup()
 
         # ── Altın toplama ───────────────────────────────────────────────
+        coin_picked = False
         for coin in self.gold_coins:
             v = coin.update(p)
             if v:
                 self.session_gold += v
+                coin_picked = True
+        if coin_picked:
+            self.sfx.play_coin()
 
         # ── Sandık etkileşimi ───────────────────────────────────────────
         for chest in self.chests:
