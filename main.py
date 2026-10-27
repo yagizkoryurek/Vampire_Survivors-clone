@@ -23,6 +23,7 @@ import array
 from dataclasses import dataclass, field
 from typing import List, Optional
 from enum import Enum, auto
+import audio_settings
 
 # ---------------------------------------------------------------------------
 # Başarım sistemi
@@ -476,6 +477,10 @@ STRINGS = {
         "level_completed":"LEVEL COMPLETED",
         "next_level":     "Next Level",
         "menu_sound":     "Ses",
+        "vol_master":     "Ana Ses",
+        "vol_music":      "Müzik Sesi",
+        "vol_sfx":        "Efekt Sesi",
+        "vol_coin":       "Altın Sesi",
         "menu_sound_on":  "AÇIK",
         "menu_sound_off": "KAPALI",
         "menu_fullscreen":"Tam Ekran",
@@ -590,6 +595,10 @@ STRINGS = {
         "level_completed":"LEVEL COMPLETED",
         "next_level":     "Next Level",
         "menu_sound":     "Sound",
+        "vol_master":     "Master Volume",
+        "vol_music":      "Music Volume",
+        "vol_sfx":        "SFX Volume",
+        "vol_coin":       "Coin Volume",
         "menu_sound_on":  "ON",
         "menu_sound_off": "OFF",
         "menu_fullscreen":"Fullscreen",
@@ -645,14 +654,40 @@ def toggle_lang():
 class SoundEngine:
     SR = 44100
 
-    def __init__(self):
+    def __init__(self, settings_path=None):
         pygame.mixer.pre_init(self.SR, -16, 1, 512)
         pygame.mixer.init()
         self.muted   = False
+        self._settings_path = settings_path
+        self.volumes = audio_settings.load_settings(settings_path)
         self._cache: dict = {}
         self._last_play: dict = {}
         self._bg_channel: Optional[pygame.mixer.Channel] = None
+        self._bg_sound: Optional[pygame.mixer.Sound] = None
         self._start_bg()
+
+    # --- Ses seviyesi ayarları ---
+    # Seviye yalnızca Sound.set_volume ile uygulanır (kanal sesi 1.0 kalır);
+    # mute ayrı bir mekanizmadır ve seviyeleri değiştirmez.
+    def _gain(self, key):
+        eff = audio_settings.effective_volumes(self.volumes)
+        return eff["coin"] if key == 'coin' else eff["sfx"]
+
+    def set_volume(self, name, percent):
+        if name in audio_settings.KEYS:
+            self.volumes[name] = audio_settings.clamp_percent(
+                percent, self.volumes[name])
+            self._apply_volumes()
+
+    def _apply_volumes(self):
+        for key, snd in self._cache.items():
+            snd.set_volume(self._gain(key))
+        if self._bg_sound:
+            self._bg_sound.set_volume(
+                audio_settings.effective_volumes(self.volumes)["music"])
+
+    def save_volumes(self):
+        return audio_settings.save_settings(self.volumes, self._settings_path)
 
     # --- Sinyal üreticiler ---
     def _sine_buf(self, freq, dur, vol=0.45, attack=0.01, decay_exp=1.0):
@@ -707,7 +742,7 @@ class SoundEngine:
         if key not in self._cache:
             data = fn()
             snd  = pygame.mixer.Sound(buffer=data)
-            snd.set_volume(0.55)
+            snd.set_volume(self._gain(key))
             self._cache[key] = snd
         return self._cache[key]
 
@@ -810,7 +845,8 @@ class SoundEngine:
         try:
             data = self._build_bg()
             snd  = pygame.mixer.Sound(buffer=data)
-            snd.set_volume(0.22)
+            snd.set_volume(audio_settings.effective_volumes(self.volumes)["music"])
+            self._bg_sound   = snd
             self._bg_channel = snd.play(loops=-1)
         except Exception:
             self._bg_channel = None
@@ -2546,6 +2582,65 @@ class Button:
 
 
 # ---------------------------------------------------------------------------
+# Menü: yatay kaydırıcı (0-100 %)
+# ---------------------------------------------------------------------------
+class Slider:
+    def __init__(self, x, y, w, value, font, on_change=None, on_release=None):
+        self.track      = pygame.Rect(x, y, w, 8)
+        self.hit        = self.track.inflate(20, 28)
+        self.value      = audio_settings.clamp_percent(value)
+        self.font       = font
+        self.on_change  = on_change
+        self.on_release = on_release
+        self.dragging   = False
+        self.focused    = False
+
+    def _set_from_x(self, mx):
+        frac = (mx - self.track.x) / self.track.w
+        self.set_value(round(max(0.0, min(1.0, frac)) * 100))
+
+    def set_value(self, v):
+        v = audio_settings.clamp_percent(v, self.value)
+        if v != self.value:
+            self.value = v
+            if self.on_change:
+                self.on_change(v)
+
+    def handle_event(self, ev):
+        if ev.type == pygame.MOUSEBUTTONDOWN and ev.button == 1:
+            self.focused = self.hit.collidepoint(ev.pos)
+            if self.focused:
+                self.dragging = True
+                self._set_from_x(ev.pos[0])
+        elif ev.type == pygame.MOUSEMOTION and self.dragging:
+            self._set_from_x(ev.pos[0])
+        elif ev.type == pygame.MOUSEBUTTONUP and ev.button == 1 and self.dragging:
+            self.dragging = False
+            if self.on_release:
+                self.on_release(self.value)
+        elif ev.type == pygame.KEYDOWN and self.focused:
+            if ev.key == pygame.K_LEFT:
+                self.set_value(self.value - 5)
+                if self.on_release: self.on_release(self.value)
+            elif ev.key == pygame.K_RIGHT:
+                self.set_value(self.value + 5)
+                if self.on_release: self.on_release(self.value)
+
+    def draw(self, surf):
+        pygame.draw.rect(surf, (30, 28, 50), self.track, border_radius=4)
+        fill = self.track.copy()
+        fill.w = int(self.track.w * self.value / 100)
+        if fill.w > 0:
+            pygame.draw.rect(surf, (140, 120, 255), fill, border_radius=4)
+        pygame.draw.rect(surf, (80, 75, 140), self.track, 1, border_radius=4)
+        hx = self.track.x + fill.w
+        clr = (255, 255, 255) if (self.dragging or self.focused) else (200, 195, 240)
+        pygame.draw.circle(surf, clr, (hx, self.track.centery), 9)
+        txt = self.font.render(f"{self.value}%", True, (200, 195, 240))
+        surf.blit(txt, txt.get_rect(midleft=(self.track.right + 24, self.track.centery)))
+
+
+# ---------------------------------------------------------------------------
 # GameState
 # ---------------------------------------------------------------------------
 class GameState(Enum):
@@ -2749,6 +2844,12 @@ class CampaignScreen:
 # Ayarlar Ekranı
 # ---------------------------------------------------------------------------
 class SettingsScreen:
+    VOLUMES     = [("master", "vol_master"), ("music", "vol_music"),
+                   ("sfx", "vol_sfx"), ("coin", "vol_coin")]
+    SLIDER_Y    = 165
+    SLIDER_STEP = 52
+    TOGGLE_Y    = 395
+
     def __init__(self, sfx):
         self.sfx        = sfx
         self.fullscreen = False
@@ -2760,11 +2861,26 @@ class SettingsScreen:
 
     def _build_buttons(self):
         cx   = SCREEN_W // 2
-        ry   = SCREEN_H // 2 - 55
-        step = 70
+        ry   = self.TOGGLE_Y
+        step = 60
+        self.sliders = []
+        for i, (name, _) in enumerate(self.VOLUMES):
+            sl = Slider(cx - 40, self.SLIDER_Y + i * self.SLIDER_STEP + 22, 240,
+                        self.sfx.volumes[name], self.font_lbl,
+                        on_change=lambda v, n=name: self.sfx.set_volume(n, v),
+                        on_release=lambda v, n=name: self._released(n))
+            self.sliders.append(sl)
         self.btn_sound = Button(cx - 60, ry,        120, 48, self._slbl(), self.font_btn)
         self.btn_fs    = Button(cx - 60, ry + step,  120, 48, self._flbl(), self.font_btn)
         self.btn_back  = Button(cx - 100, ry + step*2+10, 200, 48, T("menu_back"), self.font_btn)
+
+    def _released(self, name):
+        self.sfx.save_volumes()
+        # kısa örnek sesle duyurma (mute iken _play zaten susturur)
+        if name == "coin":
+            self.sfx.play_coin()
+        elif name in ("master", "sfx"):
+            self.sfx.play_xp()
 
     def _slbl(self): return T("menu_sound_off") if self.sfx.muted else T("menu_sound_on")
     def _flbl(self): return T("menu_fs_on") if self.fullscreen else T("menu_fs_off")
@@ -2775,7 +2891,10 @@ class SettingsScreen:
             btn.update(mx, my)
         for ev in events:
             if ev.type == pygame.KEYDOWN and ev.key == pygame.K_ESCAPE:
+                self.sfx.save_volumes()
                 return "back"
+            for sl in self.sliders:
+                sl.handle_event(ev)
             if self.btn_sound.is_clicked(ev):
                 self.sfx.toggle_mute(); self.btn_sound.label = self._slbl()
             elif self.btn_fs.is_clicked(ev):
@@ -2784,6 +2903,7 @@ class SettingsScreen:
                 pygame.display.set_mode((SCREEN_W, SCREEN_H), flags)
                 self.btn_fs.label = self._flbl()
             elif self.btn_back.is_clicked(ev):
+                self.sfx.save_volumes()
                 return "back"
         return None
 
@@ -2797,8 +2917,13 @@ class SettingsScreen:
         title = self.font_title.render(T("menu_settings"), True, (180,140,255))
         surf.blit(title, title.get_rect(centerx=SCREEN_W//2, y=80))
         pygame.draw.line(surf, (80,60,140), (SCREEN_W//2-200, 140), (SCREEN_W//2+200, 140), 1)
-        ry   = SCREEN_H // 2 - 55
-        step = 70
+        for i, (_, key) in enumerate(self.VOLUMES):
+            s = self.font_lbl.render(T(key), True, (180,175,220))
+            surf.blit(s, (SCREEN_W//2 - 200, self.SLIDER_Y + i * self.SLIDER_STEP + 8))
+        for sl in self.sliders:
+            sl.draw(surf)
+        ry   = self.TOGGLE_Y
+        step = 60
         lbls = [T("menu_sound"), T("menu_fullscreen")]
         for i, lbl in enumerate(lbls):
             s = self.font_lbl.render(lbl, True, (180,175,220))
@@ -3122,6 +3247,7 @@ class Game:
 
             for ev in raw:
                 if ev.type == pygame.QUIT:
+                    self.sfx.save_volumes()
                     pygame.quit(); sys.exit()
 
             # ── MENU ───────────────────────────────────────────────────────
@@ -3131,7 +3257,9 @@ class Game:
                 elif action == "campaign": self._go_campaign()
                 elif action == "chars":    self._go_chars()
                 elif action == "settings": self._go_settings()
-                elif action == "quit":     pygame.quit(); sys.exit()
+                elif action == "quit":
+                    self.sfx.save_volumes()
+                    pygame.quit(); sys.exit()
                 else:
                     for ev in raw:
                         if ev.type == pygame.KEYDOWN and ev.key == pygame.K_l:
