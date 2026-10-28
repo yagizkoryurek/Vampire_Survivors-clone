@@ -76,15 +76,26 @@ jobs:
           body: |
             ## 🧛 Vampire Survivors Clone
 
-            ### İndirme
-            - **Windows:** `VampireSurvivorsClone.exe` — direkt çalıştır
-            - **Mac:** `VampireSurvivorsClone-Mac.zip` — zip'i aç, içindeki dosyayı çalıştır
+            ### Download
+            - **Windows:** `VampireSurvivorsClone.exe` — download and run it directly.
+            - **macOS:** `VampireSurvivorsClone-Mac.zip` — unzip it, then run the extracted file.
 
-            ### Kontroller
-            - `WASD` / Ok tuşları → Hareket
-            - `P` → Duraklat
-            - `1/2/3` → Upgrade seç
-            - `R` → Yeniden başla
-            - `ESC` → Çıkış
+            ### Audio Settings
+            Open **Settings** from the main menu to adjust four volume sliders:
+            - **Master Volume** — overall volume for all audio.
+            - **Music Volume** — background music.
+            - **SFX Volume** — sound effects.
+            - **Coin Volume** — coin pickup sound.
+
+            Your volume levels are saved automatically when you release a slider or leave the Settings screen, and they are restored the next time you launch the game. Select a slider and use the Left/Right arrow keys to adjust it in steps of 5.
+
+            ### Controls
+            - `WASD` / Arrow keys → Move
+            - `P` → Pause
+            - `1` / `2` / `3` → Choose an upgrade
+            - `M` → Toggle sound on/off
+            - `L` → Switch language
+            - `R` → Restart (after game over)
+            - `ESC` → Back to menu / close panel
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
