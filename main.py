@@ -63,6 +63,16 @@ ACHIEVEMENT_DEFS: List[AchievementDef] = [
 ]
 _DEF_BY_ID: dict = {d.id: d for d in ACHIEVEMENT_DEFS}
 
+# Toast metni T() ile çözülür; tanım içindeki title/desc yalnızca yedek değerdir.
+ACHIEVEMENT_TEXT_KEYS: dict = {
+    AchievementID.FIRST_BLOOD:     ("ach_first_blood_title",     "ach_first_blood_desc"),
+    AchievementID.MONSTER_SLAYER:  ("ach_monster_slayer_title",  "ach_monster_slayer_desc"),
+    AchievementID.SURVIVOR:        ("ach_survivor_title",        "ach_survivor_desc"),
+    AchievementID.RICH:            ("ach_rich_title",            "ach_rich_desc"),
+    AchievementID.BOSS_HUNTER:     ("ach_boss_hunter_title",     "ach_boss_hunter_desc"),
+    AchievementID.TREASURE_SEEKER: ("ach_treasure_seeker_title", "ach_treasure_seeker_desc"),
+}
+
 
 @dataclass
 class _Toast:
@@ -158,14 +168,16 @@ class AchievementManager:
         strip.fill((220, 190, 60, alpha))
         surf.blit(strip, (tx + 2, ty + 2))
         text_x = tx + 14
-        label_s = self._f_label.render("BAŞARIM AÇILDI!", True, (200, 170, 50))
+        label_s = self._f_label.render(T("ach_unlocked"), True, (200, 170, 50))
         label_s.set_alpha(alpha)
         surf.blit(label_s, (text_x, ty + 7))
-        title = f"{defn.icon}  {defn.title}" if defn.icon else defn.title
+        title_key, desc_key = ACHIEVEMENT_TEXT_KEYS[defn.id]
+        name  = T(title_key)
+        title = f"{defn.icon}  {name}" if defn.icon else name
         title_s = self._f_title.render(title, True, (240, 235, 255))
         title_s.set_alpha(alpha)
         surf.blit(title_s, (text_x, ty + 22))
-        desc_s = self._f_desc.render(defn.desc, True, (160, 155, 195))
+        desc_s = self._f_desc.render(T(desc_key), True, (160, 155, 195))
         desc_s.set_alpha(alpha)
         surf.blit(desc_s, (text_x, ty + 40))
 
@@ -438,6 +450,19 @@ STRINGS = {
         "muted":         "Ses: KAPALI",
         "unmuted":       "Ses: AÇIK",
         "lang_label":    "TR",
+        "ach_unlocked":  "BAŞARIM AÇILDI!",
+        "ach_first_blood_title":     "İlk Kan",
+        "ach_first_blood_desc":      "İlk düşmanı öldür",
+        "ach_monster_slayer_title":  "Canavar Avcısı",
+        "ach_monster_slayer_desc":   "100 düşman öldür",
+        "ach_survivor_title":        "Hayatta Kalan",
+        "ach_survivor_desc":         "10 dakika hayatta kal",
+        "ach_rich_title":            "Zengin",
+        "ach_rich_desc":             "1000 altın biriktir",
+        "ach_boss_hunter_title":     "Boss Avcısı",
+        "ach_boss_hunter_desc":      "İlk boss'u öldür",
+        "ach_treasure_seeker_title": "Hazine Avcısı",
+        "ach_treasure_seeker_desc":  "10 sandık aç",
         "upgrade_names": {
             "MAX_HP":   "Maks Sağlık",
             "SPEED":    "Hız",
@@ -556,6 +581,19 @@ STRINGS = {
         "muted":         "Sound: OFF",
         "unmuted":       "Sound: ON",
         "lang_label":    "EN",
+        "ach_unlocked":  "ACHIEVEMENT UNLOCKED!",
+        "ach_first_blood_title":     "First Blood",
+        "ach_first_blood_desc":      "Kill your first enemy",
+        "ach_monster_slayer_title":  "Monster Slayer",
+        "ach_monster_slayer_desc":   "Kill 100 enemies",
+        "ach_survivor_title":        "Survivor",
+        "ach_survivor_desc":         "Survive for 10 minutes",
+        "ach_rich_title":            "Rich",
+        "ach_rich_desc":             "Collect 1000 gold",
+        "ach_boss_hunter_title":     "Boss Hunter",
+        "ach_boss_hunter_desc":      "Kill your first boss",
+        "ach_treasure_seeker_title": "Treasure Seeker",
+        "ach_treasure_seeker_desc":  "Open 10 chests",
         "upgrade_names": {
             "MAX_HP":   "Max Health",
             "SPEED":    "Speed",
